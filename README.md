@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 cp ../.env.example .env        # .env 파일 생성 후 API 키 입력
 
-uvicorn app.main:app --reload
+uvicorn app.main:app --port 8001
 # → http://localhost:8000
 # → API 문서: http://localhost:8000/docs
 ```
