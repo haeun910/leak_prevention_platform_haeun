@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -94,7 +94,6 @@ class ExceptionKeyword(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.username == "admin").first()
@@ -102,15 +101,15 @@ def init_db():
             admin = User(
                 username="admin",
                 password_hash=hash_password("12345678"),
-                name="Admin",
-                department="Operations",
+                name="관리자",
+                department="운영",
                 role="admin",
             )
             db.add(admin)
         else:
             admin.password_hash = hash_password("12345678")
-            admin.name = admin.name or "Admin"
-            admin.department = admin.department or "Operations"
+            admin.name = "관리자"
+            admin.department = "운영"
             admin.role = "admin"
         db.commit()
     finally:

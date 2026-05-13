@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import List
 from collections import Counter
+from datetime import datetime, timezone, timedelta
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.core.database import (
     ChatConversation,
@@ -14,9 +17,8 @@ from app.core.database import (
     get_db,
 )
 from app.core.security import decode_token
-from app.schemas.models import LogEntry, DashboardStats
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from datetime import datetime, timezone, timedelta
+from app.schemas.models import DashboardStats, LogEntry
+
 
 router = APIRouter()
 bearer = HTTPBearer()
@@ -26,38 +28,24 @@ KST = timezone(timedelta(hours=9))
 def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer)):
     payload = decode_token(credentials.credentials)
     if payload.get("role") != "admin":
-        from fastapi import HTTPException, status
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="관리자 권한 필요")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="관리자 권한이 필요합니다.")
     return payload
 
 
 @router.get("/stats", response_model=DashboardStats)
 def get_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
-    """대시보드 통계 요약"""
     total_requests = db.query(MaskingLog).count()
-
     total_masked = db.query(func.sum(MaskingLog.masked_count)).scalar() or 0
+    masked_requests = db.query(MaskingLog).filter(MaskingLog.masked_count > 0).count()
+    high_risk_count = db.query(MaskingLog).filter(func.lower(MaskingLog.risk_level) == "high").count()
 
-    masked_requests = (
-        db.query(MaskingLog)
-        .filter(MaskingLog.masked_count > 0)
-        .count()
-    )
-
-    high_risk_count = (
-        db.query(MaskingLog)
-        .filter(func.lower(MaskingLog.risk_level) == "high")
-        .count()
-    )
-
-    # 엔티티 타입별 집계
-    logs = db.query(MaskingLog).all()
     entity_counter = Counter()
-
-    for log in logs:
+    for log in db.query(MaskingLog).all():
         if log.entity_types:
             for entity_type in log.entity_types.split(","):
-                entity_counter[entity_type.strip()] += 1
+                entity_type = entity_type.strip()
+                if entity_type:
+                    entity_counter[entity_type] += 1
 
     return DashboardStats(
         total_requests=total_requests,
@@ -69,54 +57,60 @@ def get_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
 
 
 def _entity_count(message: ChatMessage) -> int:
-    if not message.entities:
-        return 0
-    if isinstance(message.entities, list):
-        return len(message.entities)
-    return 0
+    return len(message.entities or []) if isinstance(message.entities, list) else 0
 
 
 @router.get("/dashboard/summary")
 def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     logs = db.query(MaskingLog).order_by(MaskingLog.timestamp.desc()).all()
-    total_requests = len(logs)
-    total_masked = sum(log.masked_count or 0 for log in logs)
-    high_risk_count = sum(1 for log in logs if (log.risk_level or "").lower() == "high")
     today = datetime.now(KST).date()
     month = datetime.now(KST).month
-    today_masked = sum(log.masked_count or 0 for log in logs if log.timestamp and log.timestamp.date() == today)
-    month_masked = sum(log.masked_count or 0 for log in logs if log.timestamp and log.timestamp.month == month)
 
     by_day = Counter()
     by_month = Counter()
     by_year = Counter()
     entity_counter = Counter()
+
     for log in logs:
+        count = log.masked_count or 0
         if log.timestamp:
-            by_day[log.timestamp.strftime("%m/%d")] += log.masked_count or 0
-            by_month[log.timestamp.strftime("%Y-%m")] += log.masked_count or 0
-            by_year[str(log.timestamp.year)] += log.masked_count or 0
+            by_day[log.timestamp.strftime("%m/%d")] += count
+            by_month[log.timestamp.strftime("%Y-%m")] += count
+            by_year[str(log.timestamp.year)] += count
         if log.entity_types:
             for entity_type in log.entity_types.split(","):
-                if entity_type.strip():
-                    entity_counter[entity_type.strip()] += log.masked_count or 1
+                entity_type = entity_type.strip()
+                if entity_type:
+                    entity_counter[entity_type] += count or 1
 
-    recent_logs = logs[:10]
     return {
         "summary": {
-            "total_requests": total_requests,
-            "total_masked": total_masked,
-            "today_masked": today_masked,
-            "month_masked": month_masked,
-            "high_risk_count": high_risk_count,
-            "pending_exception_requests": db.query(ExceptionRequest).filter(ExceptionRequest.status == "pending").count(),
+            "total_requests": len(logs),
+            "total_masked": sum(log.masked_count or 0 for log in logs),
+            "today_masked": sum(
+                log.masked_count or 0
+                for log in logs
+                if log.timestamp and log.timestamp.date() == today
+            ),
+            "month_masked": sum(
+                log.masked_count or 0
+                for log in logs
+                if log.timestamp and log.timestamp.month == month
+            ),
+            "high_risk_count": sum(1 for log in logs if (log.risk_level or "").lower() == "high"),
+            "pending_exception_requests": db.query(ExceptionRequest)
+            .filter(ExceptionRequest.status == "pending")
+            .count(),
         },
         "masking_stats": {
-            "day": [{"label": k, "count": v} for k, v in sorted(by_day.items())[-7:]],
-            "month": [{"label": k, "count": v} for k, v in sorted(by_month.items())[-6:]],
-            "year": [{"label": k, "count": v} for k, v in sorted(by_year.items())[-5:]],
+            "day": [{"label": key, "count": value} for key, value in sorted(by_day.items())[-7:]],
+            "month": [{"label": key, "count": value} for key, value in sorted(by_month.items())[-6:]],
+            "year": [{"label": key, "count": value} for key, value in sorted(by_year.items())[-5:]],
         },
-        "categories": [{"category": k, "count": v} for k, v in entity_counter.most_common(8)],
+        "categories": [
+            {"category": key, "count": value}
+            for key, value in entity_counter.most_common(8)
+        ],
         "recent_logs": [
             {
                 "id": log.id,
@@ -126,51 +120,57 @@ def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_a
                 "masked_count": log.masked_count or 0,
                 "session_id": log.session_id,
             }
-            for log in recent_logs
+            for log in logs[:10]
         ],
     }
 
 
 @router.get("/dashboard/users")
 def get_user_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
-    users = db.query(User).all()
     result = []
-    for user in users:
-        conv_ids = [c.id for c in db.query(ChatConversation).filter(ChatConversation.user_id == user.id).all()]
+    for user in db.query(User).all():
+        conversations = db.query(ChatConversation).filter(ChatConversation.user_id == user.id).all()
+        conversation_ids = [conversation.id for conversation in conversations]
         messages = []
-        if conv_ids:
-            messages = db.query(ChatMessage).filter(ChatMessage.conversation_id.in_(conv_ids)).all()
-        masked_messages = [m for m in messages if m.was_masked]
-        result.append({
-            "user_id": user.id,
-            "username": user.username,
-            "name": user.name,
-            "department": user.department,
-            "role": user.role,
-            "conversation_count": len(conv_ids),
-            "message_count": len(messages),
-            "masked_message_count": len(masked_messages),
-            "masked_count": sum(_entity_count(m) for m in masked_messages),
-            "high_risk_count": sum(1 for m in masked_messages if (m.risk_level or "").lower() == "high"),
-        })
+        if conversation_ids:
+            messages = db.query(ChatMessage).filter(ChatMessage.conversation_id.in_(conversation_ids)).all()
+        masked_messages = [message for message in messages if message.was_masked]
+        result.append(
+            {
+                "user_id": user.id,
+                "username": user.username,
+                "name": user.name,
+                "department": user.department,
+                "role": user.role,
+                "conversation_count": len(conversation_ids),
+                "message_count": len(messages),
+                "masked_message_count": len(masked_messages),
+                "masked_count": sum(_entity_count(message) for message in masked_messages),
+                "high_risk_count": sum(
+                    1 for message in masked_messages if (message.risk_level or "").lower() == "high"
+                ),
+            }
+        )
     return sorted(result, key=lambda item: item["masked_count"], reverse=True)
 
 
 @router.get("/dashboard/departments")
 def get_department_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
-    user_stats = get_user_stats(db, _)
     departments = {}
-    for item in user_stats:
+    for item in get_user_stats(db, _):
         department = item["department"] or "미지정"
-        current = departments.setdefault(department, {
-            "department": department,
-            "user_count": 0,
-            "conversation_count": 0,
-            "message_count": 0,
-            "masked_message_count": 0,
-            "masked_count": 0,
-            "high_risk_count": 0,
-        })
+        current = departments.setdefault(
+            department,
+            {
+                "department": department,
+                "user_count": 0,
+                "conversation_count": 0,
+                "message_count": 0,
+                "masked_message_count": 0,
+                "masked_count": 0,
+                "high_risk_count": 0,
+            },
+        )
         current["user_count"] += 1
         for key in ["conversation_count", "message_count", "masked_message_count", "masked_count", "high_risk_count"]:
             current[key] += item[key]
@@ -185,34 +185,33 @@ def get_logs(
     db: Session = Depends(get_db),
     _=Depends(get_current_admin),
 ):
-    """마스킹 로그 목록 조회"""
     query = db.query(MaskingLog)
     if risk_level:
         query = query.filter(MaskingLog.risk_level == risk_level)
-    logs = query.order_by(MaskingLog.timestamp.desc()).offset(skip).limit(limit).all()
-    return logs
+    return query.order_by(MaskingLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 
 @router.get("/users")
 def list_users(db: Session = Depends(get_db), _=Depends(get_current_admin)):
-    users = db.query(User).order_by(User.created_at.desc()).all()
     result = []
-    for user in users:
+    for user in db.query(User).order_by(User.created_at.desc()).all():
         conversations = db.query(ChatConversation).filter(ChatConversation.user_id == user.id).all()
         conversation_ids = [conversation.id for conversation in conversations]
         message_count = 0
         if conversation_ids:
             message_count = db.query(ChatMessage).filter(ChatMessage.conversation_id.in_(conversation_ids)).count()
-        result.append({
-            "id": user.id,
-            "username": user.username,
-            "name": user.name,
-            "department": user.department,
-            "role": user.role,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "conversation_count": len(conversations),
-            "message_count": message_count,
-        })
+        result.append(
+            {
+                "id": user.id,
+                "username": user.username,
+                "name": user.name,
+                "department": user.department,
+                "role": user.role,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "conversation_count": len(conversations),
+                "message_count": message_count,
+            }
+        )
     return result
 
 
@@ -268,15 +267,16 @@ def list_exception_requests(db: Session = Depends(get_db), _=Depends(get_current
 
 @router.post("/exception-requests")
 def create_exception_request(body: dict, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    keyword = body.get("keyword", "").strip()
+    if not keyword:
+        raise HTTPException(status_code=400, detail="키워드는 필수입니다.")
     row = ExceptionRequest(
-        keyword=body.get("keyword", "").strip(),
+        keyword=keyword,
         requester=body.get("requester", "").strip(),
         department=body.get("department", "").strip(),
         reason=body.get("reason", "").strip(),
         status=body.get("status", "pending"),
     )
-    if not row.keyword:
-        raise HTTPException(status_code=400, detail="키워드는 필수입니다.")
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -292,15 +292,18 @@ def update_exception_request(request_id: int, body: dict, db: Session = Depends(
         if key in body:
             setattr(row, key, body[key])
     row.updated_at = datetime.now(KST)
+
     if row.status == "approved" and row.keyword:
         exists = db.query(ExceptionKeyword).filter(ExceptionKeyword.keyword == row.keyword).first()
         if not exists:
-            db.add(ExceptionKeyword(
-                keyword=row.keyword,
-                category=row.department or "request",
-                description=row.reason or "승인된 예외 요청",
-                enabled=True,
-            ))
+            db.add(
+                ExceptionKeyword(
+                    keyword=row.keyword,
+                    category=row.department or "request",
+                    description=row.reason or "승인된 예외 요청",
+                    enabled=True,
+                )
+            )
     db.commit()
     return {"ok": True}
 
