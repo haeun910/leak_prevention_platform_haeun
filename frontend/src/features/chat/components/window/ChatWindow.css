@@ -1,0 +1,79 @@
+.chat-window {
+    flex: 1;
+    overflow-y: auto;
+    background: white;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .messages-container {
+    width: 100%;
+    max-width: 750px;
+    padding: 40px 24px;
+  }
+  
+  .empty-chat {
+    text-align: center;
+    padding: 100px 20px;
+    color: #666;
+  }
+  
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+  
+  .empty-chat h2 {
+    font-size: 24px;
+    margin: 0 0 12px 0;
+    color: #333;
+  }
+  
+  .empty-chat p {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.6;
+  }
+  
+  .loading-message {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+  }
+  
+  .loading-bubble {
+    background: #f0f0f0;
+    padding: 16px 20px;
+    border-radius: 18px;
+    max-width: 60px;
+  }
+  
+  .loading-dots {
+    display: flex;
+    gap: 6px;
+  }
+  
+  .loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: #999;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+  
+  .loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  
+  .loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1);
+    }
+  }
