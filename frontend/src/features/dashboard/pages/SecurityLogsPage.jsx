@@ -26,7 +26,9 @@ function SecurityLogsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [risk]);
+  useEffect(() => {
+    load();
+  }, [risk]);
 
   const summary = useMemo(() => ({
     total: logs.length,
@@ -47,7 +49,10 @@ function SecurityLogsPage() {
   };
 
   return (
-    <DashboardLayout title="보안 현황 이력" description="마스킹 탐지, 위험도, 처리 단계별 이력을 확인합니다.">
+    <DashboardLayout
+      title="보안 현황 이력"
+      description="마스킹 감지, 위험도, 처리 단계별 이력을 확인합니다."
+    >
       {error && <div className="dashboard-state error">{error}</div>}
       <section className="security-summary-grid">
         <article>
@@ -67,7 +72,7 @@ function SecurityLogsPage() {
         </article>
         <article>
           <ShieldCheck size={20} />
-          <span>탐지 엔티티</span>
+          <span>감지 항목</span>
           <strong>{summary.entities}</strong>
         </article>
       </section>
@@ -93,7 +98,7 @@ function SecurityLogsPage() {
                 <tr>
                   <th>시각</th>
                   <th>위험도</th>
-                  <th>탐지 유형</th>
+                  <th>감지 유형</th>
                   <th>단계</th>
                   <th>마스킹 수</th>
                   <th>입력 길이</th>

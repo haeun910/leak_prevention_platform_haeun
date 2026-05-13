@@ -15,6 +15,7 @@ function useDashboardData() {
 
   useEffect(() => {
     let mounted = true;
+
     async function load() {
       setLoading(true);
       setError('');
@@ -32,8 +33,11 @@ function useDashboardData() {
         if (mounted) setLoading(false);
       }
     }
+
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const summary = useMemo(() => {
@@ -43,7 +47,7 @@ function useDashboardData() {
         id: 'todayMasked',
         title: '오늘 마스킹 건수',
         value: formatNumber(data.today_masked),
-        description: '오늘 탐지 및 마스킹된 항목 수',
+        description: '오늘 감지 및 마스킹된 항목 수',
         accentText: '일간',
         icon: CalendarCheck,
       },

@@ -34,7 +34,9 @@ function ExceptionKeywordsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,7 +69,10 @@ function ExceptionKeywordsPage() {
   const formatDate = (value) => value ? value.slice(0, 10) : '-';
 
   return (
-    <DashboardLayout title="예외 관리" description="마스킹 예외 요청을 처리하고 승인된 키워드 목록을 관리합니다.">
+    <DashboardLayout
+      title="예외 관리"
+      description="마스킹 예외 요청을 처리하고 승인된 키워드 목록을 관리합니다."
+    >
       {error && <div className="dashboard-state error">{error}</div>}
       <div className="exception-tabs">
         <button className="exception-tab" onClick={() => navigate('/dashboard/exceptions')}>
@@ -86,7 +91,7 @@ function ExceptionKeywordsPage() {
         <div className="dashboard-card-header dashboard-card-header-row keyword-card-header">
           <div>
             <h2>예외 키워드 목록</h2>
-            <p>총 {enabledCount}개 등록됨 · 이 키워드들은 마스킹에서 제외됩니다.</p>
+            <p>총 {enabledCount}개 등록됨 · 활성 키워드는 마스킹에서 제외됩니다.</p>
           </div>
           <button className="dashboard-primary-btn keyword-add-btn" type="button" onClick={() => setShowForm((value) => !value)}>
             {showForm ? <X size={16} /> : <Plus size={16} />}

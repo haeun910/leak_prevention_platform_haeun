@@ -28,7 +28,9 @@ function UserManagementPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const visibleUsers = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -47,11 +49,11 @@ function UserManagementPage() {
   };
 
   const removeUser = async (user) => {
-    const ok = await showConfirm(`${user.name || user.username} 계정을 삭제하시겠습니까?\n퇴사자 계정 정리 용도로 사용하며, 해당 사용자의 대화 이력도 함께 정리됩니다.`);
+    const ok = await showConfirm(`${user.name || user.username} 계정을 삭제하시겠습니까?`);
     if (!ok) return;
     try {
       await deleteAdminUser(user.id);
-      await showAlert('계정이 삭제되었습니다.');
+      await showAlert('계정을 삭제했습니다.');
       load();
     } catch (err) {
       await showAlert(err.response?.data?.detail || '계정을 삭제하지 못했습니다.');
@@ -59,17 +61,24 @@ function UserManagementPage() {
   };
 
   return (
-    <DashboardLayout title="사용자 관리" description="재직자와 퇴사자 계정을 관리하고, 필요 시 계정을 삭제합니다.">
+    <DashboardLayout
+      title="사용자 관리"
+      description="조직 구성원의 계정과 권한을 관리합니다."
+    >
       {error && <div className="dashboard-state error">{error}</div>}
       <section className="dashboard-card user-management-card">
         <div className="dashboard-card-header dashboard-card-header-row">
           <div>
             <h2>전체 사용자</h2>
-            <p>총 {users.length}개 계정 · 삭제 시 해당 사용자의 채팅 대화도 함께 정리됩니다.</p>
+            <p>총 {users.length}개 계정</p>
           </div>
           <label className="dashboard-search">
             <Search size={16} />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="이름, 이메일, 부서 검색" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="이름, 아이디, 부서 검색"
+            />
           </label>
         </div>
 
@@ -82,7 +91,7 @@ function UserManagementPage() {
                   <th>부서</th>
                   <th>권한</th>
                   <th>가입일</th>
-                  <th>대화</th>
+                  <th>활동</th>
                   <th>관리</th>
                 </tr>
               </thead>
@@ -128,8 +137,8 @@ function UserManagementPage() {
       <section className="dashboard-card user-guide-card">
         <UserCog size={20} />
         <div>
-          <h2>퇴사자 계정 정리</h2>
-          <p>퇴사 또는 부서 이동 등으로 접근 권한이 사라진 계정은 이 화면에서 삭제하거나 권한을 변경해 관리할 수 있습니다.</p>
+          <h2>계정 정리</h2>
+          <p>퇴사 또는 부서 이동 등으로 접근 권한이 달라진 계정을 이 화면에서 삭제하거나 권한을 변경할 수 있습니다.</p>
         </div>
       </section>
     </DashboardLayout>

@@ -16,7 +16,10 @@ function UserStatsPage() {
   }, []);
 
   return (
-    <DashboardLayout title="사용자별 통계" description="사용자 단위의 대화, 메시지, 마스킹 발생량을 확인합니다.">
+    <DashboardLayout
+      title="사용자별 통계"
+      description="사용자 단위의 대화, 메시지, 마스킹 발생량을 확인합니다."
+    >
       {loading && <div className="dashboard-state">사용자 통계를 불러오는 중입니다.</div>}
       {error && <div className="dashboard-state error">{error}</div>}
       <article className="dashboard-card dashboard-card-large">

@@ -20,7 +20,9 @@ function ExceptionRequestsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const changeStatus = async (id, status) => {
     await updateExceptionRequest(id, { status });
@@ -39,7 +41,10 @@ function ExceptionRequestsPage() {
   const formatDate = (value) => value ? value.slice(0, 10) : '-';
 
   return (
-    <DashboardLayout title="예외 관리" description="마스킹 예외 요청을 처리하고 승인된 키워드 목록을 관리합니다.">
+    <DashboardLayout
+      title="예외 관리"
+      description="마스킹 예외 요청을 처리하고 승인된 키워드 목록을 관리합니다."
+    >
       {error && <div className="dashboard-state error">{error}</div>}
       <div className="exception-tabs">
         <button className="exception-tab active">

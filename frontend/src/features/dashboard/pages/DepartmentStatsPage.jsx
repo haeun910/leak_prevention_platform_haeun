@@ -18,7 +18,10 @@ function DepartmentStatsPage() {
   const max = Math.max(...rows.map((row) => row.masked_count), 1);
 
   return (
-    <DashboardLayout title="부서별 통계" description="부서별 민감정보 탐지와 마스킹 발생량을 비교합니다.">
+    <DashboardLayout
+      title="부서별 통계"
+      description="부서별 민감정보 감지 및 마스킹 발생량을 비교합니다."
+    >
       {loading && <div className="dashboard-state">부서 통계를 불러오는 중입니다.</div>}
       {error && <div className="dashboard-state error">{error}</div>}
       <section className="dashboard-grid">
