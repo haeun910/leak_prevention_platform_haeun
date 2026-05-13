@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+*.db
+*.sqlite3
+.venv/
+venv/
+
+# 모델 가중치 (용량 큼 - git에 포함 안 함)
+backend/models/*.safetensors
+backend/models/*.bin
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# 로그
+*.log
+ 

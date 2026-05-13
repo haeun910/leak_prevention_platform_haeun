@@ -1,0 +1,1100 @@
+/* 관리자 대시보드 전체 레이아웃 */
+.dashboard-layout {
+  min-height: 100vh;
+  display: flex;
+  background: #f5f7fb;
+  color: #1f2937;
+}
+
+/* 왼쪽 관리자 사이드바 */
+.dashboard-sidebar {
+  width: 270px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 대시보드 로고 영역 */
+.dashboard-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-logo-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #eef2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+}
+
+.dashboard-logo-title {
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.dashboard-logo-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 관리자 정보 박스 */
+.dashboard-admin-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f9fafb;
+}
+
+.dashboard-admin-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #111827;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.dashboard-admin-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-admin-role {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 관리자 메뉴 */
+.dashboard-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 14px;
+  border-radius: 12px;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-menu-item.active {
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 700;
+}
+
+.dashboard-menu-item.disabled {
+  color: #9ca3af;
+  cursor: default;
+}
+
+.dashboard-menu-badge {
+  font-size: 11px;
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+/* 채팅으로 돌아가기 버튼 */
+.dashboard-back-btn {
+  margin-top: auto;
+  border: none;
+  background: #111827;
+  color: #ffffff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 오른쪽 본문 */
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 36px;
+  overflow-y: auto;
+}
+
+/* 상단 헤더 */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.dashboard-header p {
+  margin: 8px 0 0;
+  color: #6b7280;
+}
+
+.dashboard-header-user {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-header-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 본문 */
+.dashboard-content {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* 상단 통계 카드 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.stat-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #f3f4f6;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-accent {
+  font-size: 12px;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.stat-value {
+  margin-top: 18px;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.stat-title {
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.stat-description {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 공통 카드 */
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-card-large {
+  min-width: 0;
+}
+
+.dashboard-card-header {
+  margin-bottom: 18px;
+}
+
+.dashboard-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-card-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dashboard-card-header p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* 기간 필터 */
+.period-filter {
+  display: flex;
+  background: #f3f4f6;
+  padding: 4px;
+  border-radius: 999px;
+  gap: 4px;
+}
+
+.period-filter-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.period-filter-btn.active {
+  background: #ffffff;
+  color: #3730a3;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* 마스킹 통계 막대 그래프 */
+.masking-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 52px 1fr 70px;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-label,
+.bar-value {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.bar-track {
+  height: 12px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #4f46e5;
+  border-radius: 999px;
+}
+
+/* 2단 카드 그리드 */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.dashboard-grid.single {
+  grid-template-columns: 1fr;
+}
+
+/* 카테고리 통계 */
+.category-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category-stat-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.category-stat-track {
+  height: 10px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.category-stat-fill {
+  height: 100%;
+  background: #6366f1;
+  border-radius: 999px;
+}
+
+/* 부서별 통계 */
+.department-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.department-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.department-track {
+  height: 10px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.department-fill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 999px;
+}
+
+/* 예외 요청 테이블 */
+.request-table-wrap {
+  overflow-x: auto;
+}
+
+.request-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.request-table th {
+  text-align: left;
+  color: #6b7280;
+  font-weight: 700;
+  padding: 10px 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.request-table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-badge.pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status-badge.low {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status-badge.medium {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status-badge.high {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.status-badge.approved {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status-badge.rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* 승인 대기 없을 때 안내 문구 */
+.approval-empty {
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* 승인/거절 버튼 묶음 */
+.approval-action-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* 역할 텍스트 (색상은 inline style로 role별 주입) */
+.role-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 회원 승인 관리 버튼 */
+.approval-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.approval-btn:hover {
+  opacity: 0.8;
+}
+
+.approval-btn.approve {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.approval-btn.reject {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.approval-btn.reset {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dashboard-state {
+  padding: 12px 14px;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 14px;
+}
+
+.dashboard-state.error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.dashboard-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-form input,
+.dashboard-form select,
+.dashboard-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+}
+
+.dashboard-form input:focus,
+.dashboard-form select:focus,
+.dashboard-form textarea:focus {
+  outline: none;
+  border-color: #245b7d;
+  box-shadow: 0 0 0 3px rgba(36, 91, 125, 0.12);
+}
+
+.dashboard-primary-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 14px;
+  background: #16415f;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboard-primary-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.dashboard-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  font-size: 14px;
+}
+
+.dashboard-check-row input {
+  width: auto;
+}
+
+.dashboard-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dashboard-action-group button {
+  border: 1px solid #dbe2ea;
+  border-radius: 8px;
+  padding: 6px 9px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboard-action-group button:hover {
+  background: #eef2f7;
+}
+
+.dashboard-action-group button.danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.dashboard-action-group button.ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.dashboard-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exception-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 24px;
+  padding: 8px;
+  border: 1px solid #dbe4ee;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+}
+
+.exception-tab {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  padding: 0 15px;
+  background: transparent;
+  color: #52647a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.exception-tab.active {
+  background: #edf3ff;
+  color: #27359f;
+}
+
+.exception-tab span {
+  min-width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #52647a;
+  font-size: 11px;
+}
+
+.exception-tab.active span {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.exception-management-card {
+  padding: 26px;
+  border-radius: 18px;
+}
+
+.exception-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.exception-filter button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.exception-filter button.active {
+  background: #ffffff;
+  color: #27359f;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.exception-table th,
+.exception-table td {
+  padding: 16px 10px;
+}
+
+.exception-keyword-cell {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.muted-cell {
+  color: #8a97aa;
+}
+
+.exception-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.exception-status.pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.exception-status.approved {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.exception-status.rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.processed-text {
+  align-self: center;
+  color: #b8c1cf;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.keyword-card-header {
+  margin-bottom: 14px;
+}
+
+.keyword-add-btn {
+  width: auto;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+}
+
+.keyword-create-form {
+  display: grid;
+  grid-template-columns: 1.1fr 0.8fr 1.5fr auto auto;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 18px;
+  padding: 14px;
+  border: 1px solid #dbe4ee;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.keyword-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.keyword-row {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.keyword-row.disabled {
+  opacity: 0.62;
+}
+
+.keyword-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.keyword-pill {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #edf3ff;
+  color: #27359f;
+  font-weight: 900;
+}
+
+.keyword-category {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.keyword-description {
+  min-width: 0;
+  overflow: hidden;
+  color: #1f2937;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.keyword-row-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.keyword-toggle {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.keyword-toggle.active {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.keyword-date {
+  color: #8a97aa;
+  font-size: 13px;
+}
+
+.keyword-delete {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+.keyword-delete:hover {
+  background: #fef2f2;
+}
+
+.dashboard-search {
+  min-width: 280px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #64748b;
+}
+
+.dashboard-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #172033;
+  font: inherit;
+}
+
+.user-management-card {
+  margin-bottom: 18px;
+}
+
+.user-table select {
+  min-height: 32px;
+  border: 1px solid #dbe2ea;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar-small {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #e8f1f8;
+  color: #16415f;
+  font-weight: 900;
+}
+
+.user-cell strong,
+.user-cell span {
+  display: block;
+}
+
+.user-cell span {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.role-pill,
+.risk-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.role-pill.admin {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.role-pill.user {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.role-pill.pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.role-pill.rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.user-guide-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.user-guide-card svg {
+  color: #16415f;
+}
+
+.user-guide-card h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.user-guide-card p {
+  margin: 0;
+  color: #64748b;
+}
+
+.security-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.security-summary-grid article {
+  padding: 20px;
+  border: 1px solid #dbe4ee;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.security-summary-grid svg {
+  color: #16415f;
+}
+
+.security-summary-grid span,
+.security-summary-grid strong {
+  display: block;
+}
+
+.security-summary-grid span {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.security-summary-grid strong {
+  margin-top: 5px;
+  color: #102235;
+  font-size: 28px;
+}
+
+.risk-pill.high {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.risk-pill.medium {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.risk-pill.low {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.risk-pill.none {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* 반응형 */
+@media (max-width: 1100px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .keyword-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .security-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: auto;
+  }
+
+  .dashboard-main {
+    padding: 22px;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card-header-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exception-tabs,
+  .exception-filter,
+  .keyword-main,
+  .keyword-row,
+  .keyword-row-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .exception-tab {
+    justify-content: center;
+  }
+
+  .dashboard-search {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .security-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,279 @@
+/* ========================================
+   메시지 버블 전체 영역
+   - 메시지 하나가 한 줄 전체 너비를 가짐
+   ======================================== */
+   .message-bubble {
+    width: 100%;
+  }
+  
+  /* ========================================
+     메시지 한 줄 레이아웃
+     - 사용자/AI 정렬을 담당
+     ======================================== */
+  .message-row {
+    display: flex;
+    width: 100%;
+  }
+  
+  /* ========================================
+     AI 메시지: 왼쪽 정렬
+     ======================================== */
+  .ai-message {
+    justify-content: flex-start;
+  }
+  
+  /* ========================================
+     사용자 메시지: 오른쪽 정렬
+     ======================================== */
+  .user-message {
+    justify-content: flex-end;
+  }
+  
+  /* ========================================
+     실제 말풍선 박스
+     - 최대 너비 제한으로 너무 길어지는 것 방지
+     ======================================== */
+  .message-body {
+    max-width: min(70%, 680px);
+    padding: 13px 16px;
+    border-radius: 14px;
+    box-sizing: border-box;
+  }
+  
+  /* ========================================
+     AI 말풍선 스타일
+     ======================================== */
+  .ai-message .message-body {
+    background: #f6f8fb;
+    border: 1px solid #dbe2ea;
+    color: #172033;
+  }
+  
+  /* ========================================
+     사용자 말풍선 스타일
+     ======================================== */
+  .user-message .message-body {
+    background: #16415f;
+    color: white;
+  }
+  
+  /* ========================================
+     본문 텍스트
+     - 긴 문자열도 줄바꿈되게 처리
+     - 엔터 입력도 유지
+     ======================================== */
+  .message-text {
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+  
+  /* ========================================
+     메시지 시간
+     ======================================== */
+  .message-time {
+    font-size: 11px;
+    color: #8e8e8e;
+  }
+  
+  .user-message .message-time {
+    color: rgba(255, 255, 255, 0.75);
+  }
+  
+  /* ========================================
+     시간 + 액션 버튼 묶음
+     ======================================== */
+  .message-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  
+  /* ========================================
+     액션 버튼 영역
+     - display:none 대신 opacity 사용
+     - 이렇게 해야 hover 시 레이아웃 안 흔들림
+     ======================================== */
+  .message-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  /* ========================================
+     말풍선 hover 시 버튼 보이기
+     ======================================== */
+  .message-body:hover .message-actions {
+    opacity: 1;
+  }
+  
+  /* ========================================
+     복사 / 편집 버튼 공통 스타일
+     - 아이콘 버튼 형태
+     ======================================== */
+  .copy-btn,
+  .edit-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s, opacity 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  
+  /* ========================================
+     사용자 메시지 버튼 색상
+     ======================================== */
+  .user-message .copy-btn,
+  .user-message .edit-btn {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .user-message .copy-btn:hover,
+  .user-message .edit-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.95);
+  }
+  
+  /* ========================================
+     AI 메시지 버튼 색상
+     ======================================== */
+  .ai-message .copy-btn {
+    color: rgba(0, 0, 0, 0.45);
+  }
+  
+  .ai-message .copy-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.75);
+  }
+  
+  /* ========================================
+     버튼 안 SVG 아이콘 크기 고정
+     ======================================== */
+  .copy-btn svg,
+  .edit-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+  
+  /* ========================================
+     마스킹 감지 정보
+     ======================================== */
+  .detected-info {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.12);
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  
+  .detected-items {
+    font-size: 11px;
+    opacity: 0.85;
+    margin-left: 4px;
+  }
+  
+  /* ========================================
+     편집 모드일 때 말풍선 폭 고정
+     - 평소에는 텍스트 길이에 맞게 줄어드는 말풍선이
+       편집 모드 진입 시 내부 구조 변화로 축소되는 문제를 방지
+     ======================================== */
+  .message-body.editing {
+    width: min(70%, 680px);
+  }
+
+  /* ========================================
+     편집 모드 전체 래퍼
+     ======================================== */
+  .edit-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ========================================
+     편집 textarea
+     - overflow: hidden → 스크롤바 제거
+     - 높이는 MessageBubble.jsx의 useEffect가 scrollHeight 기준으로 자동 조절
+     - max-height 제거 → 내용이 많아도 스크롤 없이 늘어남
+     ======================================== */
+  .edit-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 60px;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    color: white;
+    font-size: 15px;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;
+    overflow: hidden;
+    outline: none;
+  }
+  
+  .edit-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  /* ========================================
+     편집 액션 버튼
+     ======================================== */
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  
+  .edit-cancel-btn,
+  .edit-save-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .edit-cancel-btn {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .edit-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  .edit-save-btn {
+    background: rgba(255, 255, 255, 0.95);
+    color: #16415f;
+  }
+  
+  .edit-save-btn:hover {
+    background: white;
+  }
+  
+  /* ========================================
+     모바일에서는 hover가 어려우므로 버튼 항상 표시
+     ======================================== */
+     @media (max-width: 768px) {
+      .message-body {
+        max-width: 88%;
+      }
+    }

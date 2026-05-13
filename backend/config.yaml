@@ -1,0 +1,43 @@
+# 마스킹 정책 설정
+# 이 파일을 수정해 마스킹 규칙을 커스터마이징할 수 있습니다.
+
+masking:
+  # 규칙 기반 마스킹 활성화 여부
+  regex_layer:
+    enabled: true
+    rules:
+      PHONE: true
+      EMAIL: true
+      RRN: true
+      FOREIGN_RRN: true
+      PASSPORT: true
+      CAR_PLATE: true
+      BANK_ACCOUNT: true
+      CARD_NUM: true
+      IP: true
+
+  # 모델 기반 마스킹 활성화 여부
+  ner_layer:
+    enabled: true
+    entities:
+      PERSON: true
+      ADDRESS: true
+      PASSWORD: true
+      API_KEY: true
+      DOC_FILE: true
+      CONTRACT_NAME: true
+      PROPOSAL_NAME: true
+      ORG_NAME: true
+      PROJECT_NAME: true
+      FINANCIAL_NUM: true
+
+  # 위험도 임계값 (high: 15점 이상, medium: 7점 이상)
+  risk_layer:
+    enabled: true
+    high_threshold: 15
+    medium_threshold: 7
+
+# 관리자 설정
+admin:
+  session_timeout_minutes: 60
+  log_retention_days: 90

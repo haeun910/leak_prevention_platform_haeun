@@ -1,0 +1,444 @@
+/* ========================================
+   프로젝트 페이지 전체 레이아웃
+   ======================================== */
+
+   .project-page {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    background: #f9f9f9; /* 연한 회색 배경 */
+    overflow: hidden; /* 스크롤 방지 (내부에서 처리) */
+  }
+  
+  /* ========================================
+     프로젝트 메인 영역 (우측)
+     ======================================== */
+  
+  .project-main {
+    flex: 1; /* 사이드바 제외한 나머지 공간 차지 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 내부에서 스크롤 처리 */
+  }
+  
+  /* ========================================
+     상단 헤더 바
+     ======================================== */
+  
+  .project-header-bar {
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0; /* 스크롤 시에도 고정 */
+  }
+  
+  /* 뒤로 버튼 */
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .back-btn:hover {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #333;
+  }
+  
+  .back-btn svg {
+    flex-shrink: 0; /* 아이콘 크기 고정 */
+  }
+  
+  /* 프로젝트 제목 영역 */
+  .project-title-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .project-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%; /* 원형 */
+    flex-shrink: 0;
+  }
+  
+  .project-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f1f1f;
+    margin: 0;
+  }
+  
+  /* ========================================
+     프로젝트 내용 영역 (스크롤 가능)
+     ======================================== */
+  
+  .project-content {
+    flex: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto; /* 세로 스크롤 */
+    padding: 24px;
+    max-width: 900px; /* 최대 폭 제한 (가독성) */
+    margin: 0 auto; /* 가운데 정렬 */
+    width: 100%;
+    box-sizing: border-box; /* padding 포함 */
+  }
+  
+  /* 스크롤바 스타일 (선택) */
+  .project-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .project-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .project-content::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 4px;
+  }
+  
+  .project-content::-webkit-scrollbar-thumb:hover {
+    background: #b0b0b0;
+  }
+  
+  /* ========================================
+     섹션 카드 (설명, 지시사항, 채팅 목록)
+     ======================================== */
+  
+  .project-section {
+    background: white;
+    border-radius: 12px; /* 둥근 모서리 */
+    padding: 24px;
+    margin-bottom: 20px; /* 섹션 간 간격 */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* 살짝 그림자 */
+    transition: box-shadow 0.2s;
+  }
+  
+  .project-section:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); /* 호버 시 그림자 진하게 */
+  }
+  
+  /* 섹션 헤더 (제목 + 수정 버튼) */
+  .section-header {
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝 배치 */
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 이모지와 텍스트 간격 */
+  }
+  
+  /* 수정 버튼 */
+  .edit-section-btn {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  
+  .edit-section-btn:hover {
+    background: #f5f5f5;
+    border-color: #667eea;
+    color: #667eea;
+  }
+  
+  /* ========================================
+     섹션 내용 (읽기 모드)
+     ======================================== */
+  
+  .section-content {
+    color: #555;
+    line-height: 1.6; /* 줄 간격 */
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+    font-size: 15px;
+    word-wrap: break-word; /* 긴 단어 자동 줄바꿈 */
+  }
+  
+  /* 빈 상태 (클릭 유도) */
+  .empty-placeholder {
+    color: #999;
+    font-style: italic;
+    cursor: pointer;
+    padding: 16px;
+    border: 2px dashed #e5e5e5; /* 점선 테두리 */
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.2s;
+    background: #fafafa;
+  }
+  
+  .empty-placeholder:hover {
+    border-color: #667eea;
+    background: #f9f9ff;
+    color: #667eea;
+  }
+  
+  /* ========================================
+     편집 모드
+     ======================================== */
+  
+  .edit-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* 요소 간 간격 */
+  }
+  
+  .edit-section textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit; /* 부모 폰트 상속 */
+    line-height: 1.6;
+    resize: vertical; /* 세로 크기 조절 가능 */
+    box-sizing: border-box; /* padding 포함 */
+    min-height: 60px; /* 최소 높이 */
+    transition: border-color 0.2s;
+  }
+  
+  .edit-section textarea:focus {
+    outline: none;
+    border-color: #667eea; /* 포커스 시 파란 테두리 */
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); /* 살짝 빛나는 효과 */
+  }
+  
+  /* 필드 힌트 (설명 텍스트) */
+  .field-hint-project {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.4;
+  }
+  
+  /* 편집 버튼들 (취소, 저장) */
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end; /* 우측 정렬 */
+    gap: 8px;
+  }
+  
+  .cancel-btn,
+  .save-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-weight: 500;
+  }
+  
+  /* 취소 버튼 */
+  .cancel-btn {
+    background: #f5f5f5;
+    color: #666;
+  }
+  
+  .cancel-btn:hover {
+    background: #e5e5e5;
+    color: #333;
+  }
+  
+  /* 저장 버튼 */
+  .save-btn {
+    background: #667eea;
+    color: white;
+  }
+  
+  .save-btn:hover {
+    background: #5568d3;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); /* 살짝 그림자 */
+  }
+  
+  /* ========================================
+     채팅 목록
+     ======================================== */
+  
+  .chats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 채팅 아이템 간 간격 */
+  }
+  
+  /* 채팅 아이템 */
+  .chat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .chat-item:hover {
+    background: #f0f0ff; /* 연한 보라색 */
+    transform: translateX(4px); /* 살짝 오른쪽으로 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  .chat-item svg {
+    color: #667eea;
+    flex-shrink: 0; /* 아이콘 크기 고정 */
+  }
+  
+  .chat-title {
+    flex: 1; /* 남은 공간 모두 차지 */
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 긴 제목 ... 처리 */
+    white-space: nowrap; /* 한 줄로 */
+  }
+  
+  .chat-date {
+    font-size: 12px;
+    color: #999;
+    flex-shrink: 0; /* 날짜는 항상 표시 */
+  }
+  
+  /* 빈 채팅 상태 */
+  .empty-chats {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+    font-size: 15px;
+  }
+  
+  /* ========================================
+     새 채팅 시작 버튼
+     ======================================== */
+  
+  .new-chat-in-project-btn {
+    width: 100%;
+    padding: 12px;
+    background: #667eea;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    margin-top: 12px; /* 위쪽 여백 */
+  }
+  
+  .new-chat-in-project-btn:hover {
+    background: #5568d3;
+    transform: translateY(-2px); /* 살짝 위로 */
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+  
+  .new-chat-in-project-btn:active {
+    transform: translateY(0); /* 클릭 시 원위치 */
+  }
+  
+  .new-chat-in-project-btn svg {
+    flex-shrink: 0;
+  }
+  
+  /* ========================================
+     모바일 대응 (768px 이하)
+     ======================================== */
+  
+  @media (max-width: 768px) {
+    /* 헤더 바 간격 줄이기 */
+    .project-header-bar {
+      padding: 12px 16px;
+      gap: 12px;
+    }
+  
+    /* 제목 크기 줄이기 */
+    .project-title {
+      font-size: 20px;
+    }
+  
+    /* 내용 여백 줄이기 */
+    .project-content {
+      padding: 16px;
+    }
+  
+    /* 섹션 여백 줄이기 */
+    .project-section {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+  
+    /* 섹션 제목 크기 줄이기 */
+    .section-title {
+      font-size: 16px;
+    }
+  
+    /* 채팅 아이템 간격 줄이기 */
+    .chat-item {
+      padding: 10px 12px;
+      gap: 10px;
+    }
+  
+    /* 채팅 제목 크기 줄이기 */
+    .chat-title {
+      font-size: 14px;
+    }
+  
+    /* 호버 효과 제거 (모바일에서는 터치) */
+    .chat-item:hover {
+      transform: none;
+    }
+  
+    /* 버튼 패딩 줄이기 */
+    .new-chat-in-project-btn {
+      padding: 10px;
+      font-size: 13px;
+    }
+  }
+  
+  /* ========================================
+     다크모드 준비 (선택사항)
+     ======================================== */
+  
+  /* 나중에 다크모드 추가 시 사용 가능 */
+  /* @media (prefers-color-scheme: dark) {
+    .project-page {
+      background: #1a1a1a;
+    }
+    
+    .project-main {
+      background: #1a1a1a;
+    }
+    
+    .project-section {
+      background: #2a2a2a;
+      color: #e0e0e0;
+    }
+  } */
