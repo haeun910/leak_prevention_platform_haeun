@@ -1,0 +1,52 @@
+{
+  "label2id": {
+    "O": 0,
+    "B-ADDRESS": 1,
+    "I-ADDRESS": 2,
+    "B-API_KEY": 3,
+    "I-API_KEY": 4,
+    "B-DOCUMENT": 5,
+    "I-DOCUMENT": 6,
+    "B-FINANCIAL": 7,
+    "I-FINANCIAL": 8,
+    "B-ORG": 9,
+    "I-ORG": 10,
+    "B-PASSWORD": 11,
+    "I-PASSWORD": 12,
+    "B-PERSON": 13,
+    "I-PERSON": 14,
+    "B-PROJECT": 15,
+    "I-PROJECT": 16
+  },
+  "id2label": {
+    "0": "O",
+    "1": "B-ADDRESS",
+    "2": "I-ADDRESS",
+    "3": "B-API_KEY",
+    "4": "I-API_KEY",
+    "5": "B-DOCUMENT",
+    "6": "I-DOCUMENT",
+    "7": "B-FINANCIAL",
+    "8": "I-FINANCIAL",
+    "9": "B-ORG",
+    "10": "I-ORG",
+    "11": "B-PASSWORD",
+    "12": "I-PASSWORD",
+    "13": "B-PERSON",
+    "14": "I-PERSON",
+    "15": "B-PROJECT",
+    "16": "I-PROJECT"
+  },
+  "num_labels": 17,
+  "ignore_index": -100,
+  "entity_types": [
+    "ADDRESS",
+    "API_KEY",
+    "DOCUMENT",
+    "FINANCIAL",
+    "ORG",
+    "PASSWORD",
+    "PERSON",
+    "PROJECT"
+  ]
+}

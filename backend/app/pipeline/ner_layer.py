@@ -29,11 +29,15 @@ NER_MASK_LABELS = {
     "ADDRESS":        "[주소]",
     "PASSWORD":       "[비밀번호]",
     "API_KEY":        "[API키]",
+    "DOCUMENT":       "[문서명]",
     "DOC_FILE":       "[문서명]",
     "CONTRACT_NAME":  "[계약서명]",
     "PROPOSAL_NAME":  "[제안서명]",
+    "ORG":            "[기관명]",
     "ORG_NAME":       "[기관명]",
+    "PROJECT":        "[프로젝트명]",
     "PROJECT_NAME":   "[프로젝트명]",
+    "FINANCIAL":      "[금융번호]",
     "FINANCIAL_NUM":  "[금융번호]",
 }
 
@@ -41,6 +45,7 @@ NER_MASK_LABELS = {
 NER_RISK_MAP = {
     "PASSWORD":       "high",
     "API_KEY":        "high",
+    "FINANCIAL":      "high",
     "FINANCIAL_NUM":  "high",
     "NAME":           "medium",
     "PERSON":         "medium",
@@ -48,9 +53,12 @@ NER_RISK_MAP = {
     "ADDRESS":        "medium",
     "LOC":            "medium",
     "CONTRACT_NAME":  "medium",
+    "DOCUMENT":       "low",
     "DOC_FILE":       "low",
     "PROPOSAL_NAME":  "low",
+    "ORG":            "low",
     "ORG_NAME":       "low",
+    "PROJECT":        "low",
     "PROJECT_NAME":   "low",
 }
 
