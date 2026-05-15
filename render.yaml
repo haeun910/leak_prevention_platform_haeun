@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: leak-prevention-backend
+    env: docker
+    rootDir: backend
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////data/admin_logs.db
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: ALLOWED_ORIGINS
+        sync: false
+    disk:
+      name: backend-data
+      mountPath: /data
+      sizeGB: 1

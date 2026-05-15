@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import api from '../api/client'
 
 const STORAGE_KEY = 'auth-Storage'
 
@@ -26,11 +27,7 @@ const useAuthStore = create((set) => ({
       return
     }
     try {
-      const res = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!res.ok) throw new Error()
-      const user = await res.json()
+      const { data: user } = await api.get('/auth/me')
       set({ token, user })
     } catch {
       localStorage.removeItem(STORAGE_KEY)
