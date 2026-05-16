@@ -15,3 +15,5 @@ export const getExceptionKeywords = () => api.get('/admin/exception-keywords');
 export const createExceptionKeyword = (data) => api.post('/admin/exception-keywords', data);
 export const updateExceptionKeyword = (id, data) => api.patch(`/admin/exception-keywords/${id}`, data);
 export const deleteExceptionKeyword = (id) => api.delete(`/admin/exception-keywords/${id}`);
+export const getDepartmentChangeRequests = () => api.get('/admin/department-change-requests');
+export const updateDepartmentChangeRequest = (id, data) => api.patch(`/admin/department-change-requests/${id}`, data);

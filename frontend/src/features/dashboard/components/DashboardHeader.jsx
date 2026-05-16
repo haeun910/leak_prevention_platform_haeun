@@ -1,14 +1,12 @@
 // 관리자 대시보드 상단 헤더 컴포넌트
 // 역할:
 // 1) 현재 대시보드 페이지 제목 표시
-// 2) 페이지 설명 표시
-// 3) 오른쪽에 관리자 계정 정보를 간단히 표시
-function DashboardHeader({ title, description, userInfo }) {
+// 2) 오른쪽에 관리자 계정 정보를 간단히 표시
+function DashboardHeader({ title, userInfo }) {
   return (
     <header className="dashboard-header">
       <div>
         <h1>{title}</h1>
-        <p>{description}</p>
       </div>
 
       <div className="dashboard-header-user">

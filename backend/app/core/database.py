@@ -54,6 +54,19 @@ class ChatConversation(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(KST))
 
 
+class ChatProject(Base):
+    __tablename__ = "chat_projects"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(Integer, index=True)
+    name = Column(String)
+    color = Column(String, default="#667eea")
+    description = Column(String, default="")
+    instructions = Column(String, default="")
+    created_at = Column(DateTime, default=lambda: datetime.now(KST))
+    updated_at = Column(DateTime, default=lambda: datetime.now(KST))
+
+
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
@@ -90,6 +103,40 @@ class ExceptionKeyword(Base):
     enabled = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(KST))
     updated_at = Column(DateTime, default=lambda: datetime.now(KST))
+
+
+class DepartmentChangeRequest(Base):
+    __tablename__ = "department_change_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    requester = Column(String, default="")
+    current_department = Column(String, default="")
+    requested_department = Column(String, default="")
+    reason = Column(String, default="")
+    status = Column(String, default="pending")
+    created_at = Column(DateTime, default=lambda: datetime.now(KST))
+    updated_at = Column(DateTime, default=lambda: datetime.now(KST))
+
+
+class UserPreference(Base):
+    __tablename__ = "user_preferences"
+
+    user_id = Column(Integer, primary_key=True, index=True)
+    personal_instructions = Column(String, default="")
+    updated_at = Column(DateTime, default=lambda: datetime.now(KST))
+
+
+class ContactInquiry(Base):
+    __tablename__ = "contact_inquiries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, default="")
+    email = Column(String, index=True)
+    company = Column(String, default="")
+    message = Column(String)
+    status = Column(String, default="new")
+    created_at = Column(DateTime, default=lambda: datetime.now(KST))
 
 
 def init_db():

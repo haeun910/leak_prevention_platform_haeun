@@ -54,6 +54,13 @@ class RegisterRequest(BaseModel):
     department: str
 
 
+class ContactInquiryRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    email: str = Field(..., min_length=5, max_length=120)
+    company: Optional[str] = Field(default="", max_length=120)
+    message: str = Field(..., min_length=5, max_length=2000)
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -62,12 +69,16 @@ class TokenResponse(BaseModel):
 
 class LogEntry(BaseModel):
     id: int
-    timestamp: datetime
-    session_id: str
-    entity_types: str
-    detection_stage: str
-    risk_level: str
-    masked_count: int
+    timestamp: Optional[datetime] = None
+    session_id: Optional[str] = ""
+    entity_types: Optional[str] = "-"
+    detection_stage: Optional[str] = ""
+    risk_level: Optional[str] = "none"
+    masked_count: int = 0
+    was_masked: bool = False
+    input_length: int = 0
+    processing_time_ms: int = 0
+    entity_counts: dict = Field(default_factory=dict)
 
     class Config:
         from_attributes = True

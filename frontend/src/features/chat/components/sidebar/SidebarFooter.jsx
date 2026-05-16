@@ -1,281 +1,190 @@
-import { useState } from 'react';
-import { Settings, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronRight, ShieldCheck, Settings, X } from 'lucide-react';
+import {
+  getPreferences,
+  savePreferences,
+  submitDepartmentChangeRequest,
+} from '../../../../api/client';
 
-// =====================================================
-// SidebarFooter 컴포넌트
-// 역할:
-// 1) 로그인한 사용자 이름, 부서 정보 표시
-// 2) 톱니바퀴 아이콘 클릭 → 설정 모달 오픈
-//    - 프로필 정보 (아바타, 이름, 부서) 표시
-//    - 비밀번호 변경 기능
-// 3) admin 계정인 경우 대시보드 이동 버튼 표시
-// 4) 로그아웃 버튼 표시
-// =====================================================
 function SidebarFooter({ userInfo, onGoDashboard, onLogout }) {
-  const userName       = userInfo.name       || '사용자';
+  const userName = userInfo.name || '사용자';
   const userDepartment = userInfo.department || '미지정';
-
-  // 설정 모달 열림 여부
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [personalInstructions, setPersonalInstructions] = useState('');
+  const [requestedDepartment, setRequestedDepartment] = useState('');
+  const [requestReason, setRequestReason] = useState('');
+  const [settingsMessage, setSettingsMessage] = useState('');
+  const [settingsError, setSettingsError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  // 모달 내 현재 뷰
-  // 'profile'  → 기본 프로필 화면
-  // 'password' → 비밀번호 변경 화면
-  const [settingsView, setSettingsView] = useState('profile');
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    setSettingsMessage('');
+    setSettingsError('');
+    getPreferences()
+      .then(({ data }) => setPersonalInstructions(data.personal_instructions || ''))
+      .catch(() => setSettingsError('개인 설정을 불러오지 못했습니다.'));
+  }, [isSettingsOpen]);
 
-  // 비밀번호 변경 폼 상태
-  const [passwordForm, setPasswordForm] = useState({
-    current: '',
-    next: '',
-    confirm: '',
-  });
-
-  // 유효성 검사 오류 메시지
-  const [passwordError,   setPasswordError]   = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState('');
-
-  // 설정 모달 닫기 + 모든 상태 초기화
   const closeSettings = () => {
     setIsSettingsOpen(false);
-    setSettingsView('profile');
-    setPasswordForm({ current: '', next: '', confirm: '' });
-    setPasswordError('');
-    setPasswordSuccess('');
+    setSettingsMessage('');
+    setSettingsError('');
+    setRequestedDepartment('');
+    setRequestReason('');
   };
 
-  // 비밀번호 변경 화면으로 전환
-  const goToPasswordView = () => {
-    setSettingsView('password');
-    setPasswordError('');
-    setPasswordSuccess('');
-    setPasswordForm({ current: '', next: '', confirm: '' });
+  const handleSaveInstructions = async () => {
+    setSaving(true);
+    setSettingsMessage('');
+    setSettingsError('');
+    try {
+      await savePreferences({ personal_instructions: personalInstructions });
+      setSettingsMessage('개인 지침이 저장되었습니다.');
+    } catch {
+      setSettingsError('개인 지침 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // 프로필 화면으로 돌아가기
-  const goToProfileView = () => {
-    setSettingsView('profile');
-    setPasswordError('');
-    setPasswordSuccess('');
-    setPasswordForm({ current: '', next: '', confirm: '' });
-  };
-
-  // 비밀번호 변경 처리
-  // 유효성 검사 → 현재 비밀번호 대조 → localStorage 업데이트
-  const handlePasswordChange = () => {
-    setPasswordError('');
-    setPasswordSuccess('');
-
-    // 필수 입력 체크
-    if (!passwordForm.current || !passwordForm.next || !passwordForm.confirm) {
-      setPasswordError('모든 항목을 입력해주세요.');
+  const handleDepartmentRequest = async () => {
+    const nextDepartment = requestedDepartment.trim();
+    if (!nextDepartment) {
+      setSettingsError('변경할 부서를 입력해 주세요.');
       return;
     }
 
-    // 새 비밀번호 최소 길이 체크
-    if (passwordForm.next.length < 4) {
-      setPasswordError('새 비밀번호는 4자 이상이어야 합니다.');
-      return;
-    }
-
-    // 새 비밀번호 일치 확인
-    if (passwordForm.next !== passwordForm.confirm) {
-      setPasswordError('새 비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
-    // localStorage에서 현재 사용자 찾기
-    const users     = JSON.parse(localStorage.getItem('users') || '[]');
-    const userIndex = users.findIndex(u => u.email === userInfo.email);
-
-    if (userIndex === -1) {
-      setPasswordError('사용자 정보를 찾을 수 없습니다.');
-      return;
-    }
-
-    // 현재 비밀번호 대조
-    if (users[userIndex].password !== passwordForm.current) {
-      setPasswordError('현재 비밀번호가 올바르지 않습니다.');
-      return;
-    }
-
-    // 비밀번호 업데이트 후 저장
-    users[userIndex].password = passwordForm.next;
-    localStorage.setItem('users', JSON.stringify(users));
-
-    // 성공 메시지 표시 후 폼 초기화
-    setPasswordSuccess('비밀번호가 변경되었습니다.');
-    setPasswordForm({ current: '', next: '', confirm: '' });
-  };
-
-  // Enter 키로 비밀번호 변경 제출
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handlePasswordChange();
+    setSaving(true);
+    setSettingsMessage('');
+    setSettingsError('');
+    try {
+      await submitDepartmentChangeRequest({
+        requested_department: nextDepartment,
+        reason: requestReason.trim(),
+      });
+      setRequestedDepartment('');
+      setRequestReason('');
+      setSettingsMessage('부서 변경 요청이 관리자 대시보드로 전송되었습니다.');
+    } catch (err) {
+      setSettingsError(err.response?.data?.detail || '부서 변경 요청에 실패했습니다.');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <>
       <div className="sidebar-footer">
-
-        {/* 사용자 프로필 + 톱니바퀴 버튼 */}
         <div className="user-section">
-          <div className="user-avatar">
-            {userInfo.name ? userInfo.name.charAt(0) : 'U'}
+          <div className="user-avatar" aria-hidden="true">
+            <ShieldCheck size={18} strokeWidth={2.4} />
           </div>
 
           <div className="user-details">
             <div className="user-name">{userName}</div>
-            <div className="user-role">({userDepartment})</div>
+            <div className="user-role">{userDepartment}</div>
           </div>
 
-          {/* 설정 버튼: hover 시 표시, 클릭 시 설정 모달 오픈 */}
           <button
             className="settings-gear-btn"
             onClick={() => setIsSettingsOpen(true)}
             title="설정"
+            type="button"
           >
             <Settings size={18} strokeWidth={2} />
           </button>
         </div>
 
-        {/* admin 계정일 때만 대시보드 이동 버튼 표시 */}
         {userInfo.role === 'admin' && (
-          <button className="dashboard-btn" onClick={onGoDashboard}>
+          <button className="dashboard-btn" onClick={onGoDashboard} type="button">
             대시보드
           </button>
         )}
 
-        {/* 로그아웃 버튼 */}
-        <button className="logout-btn" onClick={onLogout}>
+        <button className="logout-btn" onClick={onLogout} type="button">
           로그아웃
         </button>
       </div>
 
-      {/* ── 설정 모달 ── */}
       {isSettingsOpen && (
         <div className="settings-modal-overlay" onClick={closeSettings}>
-          <div className="settings-modal" onClick={e => e.stopPropagation()}>
-
-            {/* ── 모달 헤더 ── */}
+          <div className="settings-modal" onClick={(event) => event.stopPropagation()}>
             <div className="settings-modal-header">
-              {/* 비밀번호 변경 뷰일 때 뒤로가기 버튼 표시 */}
-              {settingsView === 'password' ? (
-                <button className="settings-back-btn" onClick={goToProfileView}>
-                  <ChevronLeft size={18} />
-                  <span>뒤로</span>
-                </button>
-              ) : (
-                <h2 className="settings-modal-title">설정</h2>
-              )}
-              <button className="settings-modal-close" onClick={closeSettings}>
+              <h2 className="settings-modal-title">설정</h2>
+              <button className="settings-modal-close" onClick={closeSettings} type="button">
                 <X size={18} />
               </button>
             </div>
 
             <div className="settings-modal-body">
+              <section className="settings-section">
+                <h3 className="settings-section-title">프로필</h3>
+                <div className="settings-row">
+                  <span className="settings-row-label">이름</span>
+                  <span className="settings-row-value">{userName}</span>
+                </div>
+                <div className="settings-divider" />
+                <div className="settings-row">
+                  <span className="settings-row-label">부서</span>
+                  <span className="settings-row-value">{userDepartment}</span>
+                </div>
+                <div className="settings-divider" />
+                <div className="settings-row">
+                  <span className="settings-row-label">계정</span>
+                  <span className="settings-row-value">{userInfo.email || userInfo.empId || '-'}</span>
+                </div>
+              </section>
 
-              {/* ══ 프로필 뷰 ══ */}
-              {settingsView === 'profile' && (
-                <>
-                  <section className="settings-section">
-                    <h3 className="settings-section-title">프로필</h3>
+              <section className="settings-section">
+                <h3 className="settings-section-title">개인 지침</h3>
+                <p className="settings-password-desc">
+                  답변 스타일, 업무 맥락, 선호하는 출력 형식을 저장하면 새 대화에도 적용됩니다.
+                </p>
+                <textarea
+                  className="settings-textarea"
+                  value={personalInstructions}
+                  onChange={(event) => setPersonalInstructions(event.target.value)}
+                  placeholder="예: 답변은 간결하게, 표가 필요하면 Markdown 표로 정리해 주세요."
+                  rows={5}
+                />
+                <div className="settings-password-action">
+                  <button className="settings-save-btn" onClick={handleSaveInstructions} disabled={saving} type="button">
+                    저장
+                  </button>
+                </div>
+              </section>
 
-                    <div className="settings-row">
-                      <span className="settings-row-label">아바타</span>
-                      <div className="settings-avatar">
-                        {userInfo.name ? userInfo.name.charAt(0) : 'U'}
-                      </div>
-                    </div>
-                    <div className="settings-divider" />
+              <section className="settings-section">
+                <h3 className="settings-section-title">부서 변경 요청</h3>
+                <div className="settings-field-row settings-field-column">
+                  <label className="settings-field-label">변경할 부서</label>
+                  <input
+                    className="settings-field-input"
+                    value={requestedDepartment}
+                    onChange={(event) => setRequestedDepartment(event.target.value)}
+                    placeholder="예: 보안팀"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="settings-field-row settings-field-column">
+                  <label className="settings-field-label">요청 사유</label>
+                  <textarea
+                    className="settings-textarea"
+                    value={requestReason}
+                    onChange={(event) => setRequestReason(event.target.value)}
+                    placeholder="관리자가 확인할 수 있도록 간단히 적어주세요."
+                    rows={3}
+                  />
+                </div>
+                <button className="settings-nav-row settings-request-row" onClick={handleDepartmentRequest} disabled={saving} type="button">
+                  <span className="settings-row-label">관리자에게 요청 보내기</span>
+                  <ChevronRight size={16} color="#9ca3af" />
+                </button>
+              </section>
 
-                    <div className="settings-row">
-                      <span className="settings-row-label">성명</span>
-                      <span className="settings-row-value">{userName}</span>
-                    </div>
-                    <div className="settings-divider" />
-
-                    <div className="settings-row">
-                      <span className="settings-row-label">부서</span>
-                      <span className="settings-row-value">{userDepartment}</span>
-                    </div>
-                    <div className="settings-divider" />
-
-                    <div className="settings-row">
-                      <span className="settings-row-label">이메일</span>
-                      <span className="settings-row-value">{userInfo.email || '-'}</span>
-                    </div>
-                  </section>
-
-                  {/* 보안 섹션: 비밀번호 변경 버튼만 표시 */}
-                  <section className="settings-section">
-                    <h3 className="settings-section-title">보안</h3>
-                    <div className="settings-divider" />
-                    {/* 클릭 시 비밀번호 변경 뷰로 전환 */}
-                    <button className="settings-nav-row" onClick={goToPasswordView}>
-                      <span className="settings-row-label">비밀번호 변경</span>
-                      <ChevronRight size={16} color="#9ca3af" />
-                    </button>
-                  </section>
-                </>
-              )}
-
-              {/* ══ 비밀번호 변경 뷰 ══ */}
-              {settingsView === 'password' && (
-                <section className="settings-section">
-                  <h3 className="settings-section-title">비밀번호 변경</h3>
-                  <p className="settings-password-desc">
-                    현재 비밀번호를 확인한 후 새 비밀번호로 변경합니다.
-                  </p>
-
-                  <div className="settings-password-fields">
-                    <div className="settings-field-row">
-                      <label className="settings-field-label">현재 비밀번호</label>
-                      <input
-                        className="settings-field-input"
-                        type="password"
-                        placeholder="현재 비밀번호"
-                        value={passwordForm.current}
-                        onChange={e => setPasswordForm(prev => ({ ...prev, current: e.target.value }))}
-                        onKeyDown={handleKeyDown}
-                      />
-                    </div>
-                    <div className="settings-field-row">
-                      <label className="settings-field-label">새 비밀번호</label>
-                      <input
-                        className="settings-field-input"
-                        type="password"
-                        placeholder="새 비밀번호 (4자 이상)"
-                        value={passwordForm.next}
-                        onChange={e => setPasswordForm(prev => ({ ...prev, next: e.target.value }))}
-                        onKeyDown={handleKeyDown}
-                      />
-                    </div>
-                    <div className="settings-field-row">
-                      <label className="settings-field-label">비밀번호 확인</label>
-                      <input
-                        className="settings-field-input"
-                        type="password"
-                        placeholder="새 비밀번호 확인"
-                        value={passwordForm.confirm}
-                        onChange={e => setPasswordForm(prev => ({ ...prev, confirm: e.target.value }))}
-                        onKeyDown={handleKeyDown}
-                      />
-                    </div>
-                  </div>
-
-                  {passwordError   && <p className="settings-msg error">{passwordError}</p>}
-                  {passwordSuccess && <p className="settings-msg success">{passwordSuccess}</p>}
-
-                  <div className="settings-password-action">
-                    <button className="settings-save-btn" onClick={handlePasswordChange}>
-                      변경
-                    </button>
-                  </div>
-                </section>
-              )}
-
+              {settingsError && <p className="settings-msg error settings-inline-msg">{settingsError}</p>}
+              {settingsMessage && <p className="settings-msg success settings-inline-msg">{settingsMessage}</p>}
             </div>
           </div>
         </div>

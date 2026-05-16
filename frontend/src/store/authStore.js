@@ -8,19 +8,28 @@ const useAuthStore = create((set) => ({
   user: null,
 
   setAuth: (token, user) => {
-    // 로그인 시 localStorage에 직접 저장
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { token, user } }))
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { token, user } }))
+    sessionStorage.setItem('userInfo', JSON.stringify({
+      email: user.username,
+      role: user.role,
+      name: user.name,
+      empId: user.username,
+      department: user.department,
+    }))
     set({ token, user })
   },
 
   logout: () => {
+    sessionStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem('userInfo')
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem('auth-storage')
+    localStorage.removeItem('userInfo')
     set({ token: null, user: null })
   },
 
   verifyToken: async () => {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    const stored = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY) || '{}')
     const token = stored?.state?.token
     if (!token) {
       set({ token: null, user: null })
@@ -31,6 +40,8 @@ const useAuthStore = create((set) => ({
       set({ token, user })
     } catch {
       localStorage.removeItem(STORAGE_KEY)
+      sessionStorage.removeItem(STORAGE_KEY)
+      sessionStorage.removeItem('userInfo')
       set({ token: null, user: null })
     }
   },

@@ -1,31 +1,16 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Paperclip, Send, ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react';
 import { previewMask } from '../../../../api/client';
+import { labelEntityType } from '../../../../utils/entityLabels';
 import './InputBox.css';
 
 const DEBOUNCE_MS = 600;
 
 const RISK_META = {
-  high: {
-    label: 'HIGH',
-    icon: ShieldX,
-    className: 'risk-high',
-  },
-  medium: {
-    label: 'MEDIUM',
-    icon: ShieldAlert,
-    className: 'risk-medium',
-  },
-  low: {
-    label: 'LOW',
-    icon: ShieldCheck,
-    className: 'risk-low',
-  },
-  none: {
-    label: 'SAFE',
-    icon: ShieldCheck,
-    className: 'risk-none',
-  },
+  high: { label: 'HIGH', icon: ShieldX, className: 'risk-high' },
+  medium: { label: 'MEDIUM', icon: ShieldAlert, className: 'risk-medium' },
+  low: { label: 'LOW', icon: ShieldCheck, className: 'risk-low' },
+  none: { label: 'SAFE', icon: ShieldCheck, className: 'risk-none' },
 };
 
 const LLM_OPTIONS = [
@@ -34,15 +19,6 @@ const LLM_OPTIONS = [
   { value: 'gemini', label: 'Gemini', detail: 'Google' },
 ];
 
-// =====================================================
-// InputBox 컴포넌트
-// 역할:
-// 1) 사용자가 프롬프트를 입력하는 입력창
-// 2) Enter로 전송 / Shift+Enter로 줄바꿈
-// 3) 입력 내용에 따라 textarea 높이 자동 조절
-// 4) AI 응답 완료 후 자동 포커스 (마우스 클릭 없이 연속 입력 가능)
-// 5) 입력창 하단 보안 안내 문구 표시
-// =====================================================
 function InputBox({
   inputText,
   onInputChange,
@@ -52,12 +28,11 @@ function InputBox({
   onChangeLlmProvider,
 }) {
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
   const timerRef = useRef(null);
   const [risk, setRisk] = useState({ level: 'none', entities: [] });
   const [analyzing, setAnalyzing] = useState(false);
 
-  // ===== 실시간 민감정보 검증 =====
-  // 입력 중에는 /api/mask/preview만 호출해 LLM 없이 마스킹 위험도를 미리 보여준다.
   useEffect(() => {
     if (!inputText.trim()) {
       clearTimeout(timerRef.current);
@@ -86,9 +61,6 @@ function InputBox({
     return () => clearTimeout(timerRef.current);
   }, [inputText]);
 
-  // ===== 높이 자동 조절 =====
-  // inputText가 바뀔 때마다 textarea 높이를 내용에 맞게 재조정
-  // height를 auto로 초기화 후 scrollHeight로 다시 설정해야 줄어드는 것도 반영됨
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -97,33 +69,55 @@ function InputBox({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [inputText]);
 
-  // ===== 자동 포커스 =====
-  // isLoading이 false로 바뀌는 순간 입력창에 자동 포커스
-  // - 전송 후 AI 응답 완료 시 자동 포커스 → 마우스 클릭 없이 바로 다음 메시지 입력 가능
-  // - 컴포넌트 첫 마운트 시(초기 진입, 홈→채팅 전환)도 실행되어 즉시 입력 가능 상태로 시작
   useEffect(() => {
     if (!isLoading) {
       textareaRef.current?.focus();
     }
   }, [isLoading]);
 
-  // ===== Enter 전송 / Shift+Enter 줄바꿈 =====
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-
-      // 빈 문자열이거나 AI 응답 대기 중이면 전송하지 않음
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
       if (inputText.trim() && !isLoading) {
         onSend();
       }
     }
   };
 
-  // ===== 전송 버튼 클릭 =====
   const handleSendClick = () => {
     if (inputText.trim() && !isLoading) {
       onSend();
     }
+  };
+
+  const handleAttachClick = () => {
+    if (!isLoading) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const snippets = [];
+    for (const file of files) {
+      if (file.size > 200 * 1024) {
+        snippets.push(`[첨부 파일: ${file.name}]\n파일이 200KB를 넘어 본문 미리보기 없이 첨부명만 추가되었습니다.`);
+        continue;
+      }
+
+      try {
+        const content = await file.text();
+        snippets.push(`[첨부 파일: ${file.name}]\n${content}`);
+      } catch {
+        snippets.push(`[첨부 파일: ${file.name}]\n이 파일은 텍스트로 읽을 수 없어 파일명만 추가되었습니다.`);
+      }
+    }
+
+    const nextText = [inputText.trim(), snippets.join('\n\n')].filter(Boolean).join('\n\n');
+    onInputChange(nextText);
+    event.target.value = '';
   };
 
   const riskMeta = RISK_META[risk.level] || RISK_META.none;
@@ -131,7 +125,7 @@ function InputBox({
   const hasInput = Boolean(inputText.trim());
   const hasRisk = risk.entities.length > 0 && risk.level !== 'none';
   const detectedLabels = [...new Set(
-    risk.entities.map((entity) => entity.entity_type || entity.masked).filter(Boolean)
+    risk.entities.map((entity) => labelEntityType(entity.entity_type || entity.masked)).filter(Boolean)
   )];
 
   return (
@@ -168,9 +162,7 @@ function InputBox({
                   <RiskIcon size={16} />
                   <span className="live-risk-badge">{riskMeta.label}</span>
                   {hasRisk ? (
-                    <span className="live-risk-text">
-                      {detectedLabels.join(', ')} 감지됨
-                    </span>
+                    <span className="live-risk-text">{detectedLabels.join(', ')} 감지됨</span>
                   ) : (
                     <span className="live-risk-text">감지된 민감정보 없음</span>
                   )}
@@ -183,54 +175,54 @@ function InputBox({
           </div>
         )}
 
-        {/* 입력 UI 박스 (첨부 버튼 + textarea + 전송 버튼) */}
         <div className="input-wrapper">
-
-          {/* 파일 첨부 버튼 (현재 미구현 → 비활성화) */}
           <button
             className="attach-btn-inside"
-            disabled
-            title="파일 첨부 (준비 중)"
+            onClick={handleAttachClick}
+            disabled={isLoading}
+            title="파일 첨부"
+            type="button"
           >
             <Paperclip size={20} />
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,.md,.csv,.json,.log,.xml,.yaml,.yml"
+            multiple
+            hidden
+            onChange={handleFileChange}
+          />
 
-          {/* 텍스트 입력창 */}
           <textarea
             ref={textareaRef}
             className="input-field"
             placeholder="메시지를 입력하세요..."
             value={inputText}
-            onChange={(e) => onInputChange(e.target.value)}
+            onChange={(event) => onInputChange(event.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isLoading}
             rows={1}
           />
 
-          {/* 전송 버튼: 입력값이 없거나 로딩 중이면 비활성화 */}
           <button
             className="send-btn"
             onClick={handleSendClick}
             disabled={!inputText.trim() || isLoading}
+            type="button"
           >
             {isLoading ? (
-              <span className="loading-spinner">⏳</span>
+              <span className="loading-spinner" aria-label="답변 생성 중" />
             ) : (
               <Send size={20} />
             )}
           </button>
         </div>
 
-        {/* 하단 안내 문구 */}
         <div className="input-notice">
-          <p className="notice-line">
-            개인정보 및 민감정보는 자동으로 마스킹됩니다.
-          </p>
-          <p className="notice-line">
-            AI가 생성한 응답에는 오류가 포함될 수 있습니다. 중요한 업무 활용 전 내용을 검토해 주세요.
-          </p>
+          <p className="notice-line">개인정보 및 민감정보는 자동으로 마스킹됩니다.</p>
+          <p className="notice-line">AI가 생성한 응답에는 오류가 포함될 수 있습니다. 중요한 업무 활용 전 내용을 검토해 주세요.</p>
         </div>
-
       </div>
     </div>
   );

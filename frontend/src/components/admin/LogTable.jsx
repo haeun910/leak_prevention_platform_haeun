@@ -1,5 +1,6 @@
 import RiskBadge from '../chat/RiskBadge'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { labelEntityType } from '../../utils/entityLabels'
 
 export default function LogTable({ logs, page, totalPages, onPageChange, onRiskFilter, riskFilter }) {
   const RISK_OPTIONS = ['전체', 'high', 'medium', 'low']
@@ -51,8 +52,8 @@ export default function LogTable({ logs, page, totalPages, onPageChange, onRiskF
                 <td style={{ ...styles.td, ...styles.mono }}>{log.detection_stage}</td>
                 <td style={styles.td}>
                   <div style={styles.tags}>
-                    {log.entity_types.split(',').map(t => (
-                      <span key={t} style={styles.tag}>{t.trim()}</span>
+                    {String(log.entity_types || '-').split(',').map(t => (
+                      <span key={t} style={styles.tag}>{labelEntityType(t)}</span>
                     ))}
                   </div>
                 </td>

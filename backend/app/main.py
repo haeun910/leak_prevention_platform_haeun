@@ -3,7 +3,7 @@ import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import admin, auth, mask
+from app.api import admin, auth, contact, mask
 from app.core.config import settings
 from app.core.database import init_db
 
@@ -25,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(contact.router, prefix="/api/contact", tags=["contact"])
 app.include_router(mask.router, prefix="/api/mask", tags=["mask"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 

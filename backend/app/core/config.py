@@ -5,6 +5,10 @@ import yaml
 from pydantic_settings import BaseSettings
 
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DEFAULT_DATABASE_PATH = os.path.join(BASE_DIR, "admin_logs.db").replace(os.sep, "/")
+
+
 class Settings(BaseSettings):
     ALLOWED_ORIGINS: List[str] = ["*"]
 
@@ -12,7 +16,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60
 
-    DATABASE_URL: str = "sqlite:///./admin_logs.db"
+    DATABASE_URL: str = f"sqlite:///{DEFAULT_DATABASE_PATH}"
 
     NER_MODEL_NAME: str = "monologg/koelectra-base-v3-naver-ner"
 

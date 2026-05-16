@@ -1,35 +1,61 @@
-// 부서별 마스킹 통계 카드 컴포넌트
-// 역할:
-// 1) 부서별 마스킹 발생 건수 표시
-// 2) 어느 부서에서 민감정보 마스킹이 많이 발생하는지 확인 가능
-// 3) 추후 부서별 마스킹 정책 차등 적용 기능과 연결 가능
-function DepartmentStatsCard({ departments }) {
-  const maxCount = Math.max(...departments.map((item) => item.count), 1);
+function Donut({ data, selectedName, onSelectDepartment }) {
+  const total = data.reduce((sum, item) => sum + item.count, 0) || 1;
+  let offset = 0;
+
+  const handleKeyDown = (event, item) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onSelectDepartment?.(item);
+    }
+  };
 
   return (
-    <article className="dashboard-card">
+    <div className="breakdown-donut department-donut">
+      <svg viewBox="0 0 42 42" aria-label="부서별 마스킹 비중">
+        <circle className="donut-bg" cx="21" cy="21" r="15.915" />
+        {data.map((item) => {
+          const value = (item.count / total) * 100;
+          const segment = (
+            <circle
+              className={selectedName === item.department ? 'active' : ''}
+              cx="21"
+              cy="21"
+              key={item.department}
+              onClick={() => onSelectDepartment?.(item)}
+              onKeyDown={(event) => handleKeyDown(event, item)}
+              r="15.915"
+              role="button"
+              stroke={item.color}
+              tabIndex={0}
+              aria-label={`${item.department} ${item.count.toLocaleString()}건 보기`}
+              strokeDasharray={`${value} ${100 - value}`}
+              strokeDashoffset={-offset}
+            />
+          );
+          offset += value;
+          return segment;
+        })}
+      </svg>
+      <div className="breakdown-donut-center">
+        <strong>{total.toLocaleString()}</strong>
+        <span>건</span>
+      </div>
+    </div>
+  );
+}
+
+function DepartmentStatsCard({ departments, selectedDepartment, onSelectDepartment }) {
+  return (
+    <article className="dashboard-card breakdown-card">
       <div className="dashboard-card-header">
         <h2>부서별 마스킹 현황</h2>
-        <p>부서별 민감정보 탐지 발생량</p>
       </div>
 
-      <div className="department-list">
-        {departments.map((item) => (
-          <div className="department-row" key={item.department}>
-            <div className="department-top">
-              <span>{item.department}</span>
-              <strong>{item.count}건</strong>
-            </div>
-
-            <div className="department-track">
-              <div
-                className="department-fill"
-                style={{ width: `${(item.count / maxCount) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Donut
+        data={departments}
+        selectedName={selectedDepartment}
+        onSelectDepartment={onSelectDepartment}
+      />
     </article>
   );
 }
