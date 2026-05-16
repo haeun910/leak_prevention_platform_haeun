@@ -21,6 +21,3 @@ dist/
 .vscode/settings.json
 .idea/
 
-# 로그
-*.log
- 
