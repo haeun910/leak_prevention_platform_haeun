@@ -11,7 +11,7 @@ venv/
 # 모델 가중치 (용량 큼 - git에 포함 안 함)
 backend/models/*.safetensors
 backend/models/*.bin
-
+backend/models/*.pt
 # Node
 node_modules/
 dist/
