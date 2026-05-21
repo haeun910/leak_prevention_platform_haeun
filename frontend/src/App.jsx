@@ -161,6 +161,15 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/chat/:chatId"
+          element={
+            <PrivateRoute>
+              <ChatPage />
+            </PrivateRoute>
+          }
+        />
+
       </Routes>
     </BrowserRouter>
     </ModalProvider>

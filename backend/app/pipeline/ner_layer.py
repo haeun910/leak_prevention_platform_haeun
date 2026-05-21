@@ -11,6 +11,7 @@ MODEL_DIR = os.path.join(os.path.dirname(__file__), "../../models")
 # 탐지 유형 한국어 변환 매핑
 NER_TYPE_KO = {
     "PERSON":         "이름",
+    "NAME":           "이름",
     "ADDRESS":        "주소",
     "PASSWORD":       "비밀번호",
     "API_KEY":        "API키",
@@ -18,14 +19,14 @@ NER_TYPE_KO = {
     "PROPOSAL_NAME":  "제안서",
     "DOC_FILE":       "문서명",
     "PROJECT_NAME":   "프로젝트",
-    "FINANCIAL_NUM":  "금액 및 재무수치",
+    "FINANCIAL_NUM":  "재무수치",
     "ORG_NAME":       "기관명",
-    "NAME":           "문서명",
 }
 
 # 마스킹 태깅 레이블
 NER_MASK_LABELS = {
     "PERSON":         "[이름]",
+    "NAME":           "[이름]",
     "ADDRESS":        "[주소]",
     "PASSWORD":       "[비밀번호]",
     "API_KEY":        "[API키]",
@@ -33,16 +34,15 @@ NER_MASK_LABELS = {
     "PROPOSAL_NAME":  "[제안서]",
     "DOC_FILE":       "[문서명]",
     "PROJECT_NAME":   "[프로젝트]",
-    "FINANCIAL_NUM":  "[금액 및 재무수치]",
+    "FINANCIAL_NUM":  "[재무수치]",
     "ORG_NAME":       "[기관명]",
-    "NAME":           "[문서명]",
 }
 
 # 위험도 매핑
 NER_RISK_MAP = {
     "비밀번호":         "high",
     "API 키":           "high",
-    "금액 및 재무수치": "high",
+    "재무수치":         "high",
     "프로젝트":         "medium",
     "제안서":           "medium",
     "주소":             "medium",

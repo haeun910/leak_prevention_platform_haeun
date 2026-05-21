@@ -41,6 +41,10 @@ function SidebarFooter({ userInfo, onGoDashboard, onLogout }) {
     try {
       await savePreferences({ personal_instructions: personalInstructions });
       setSettingsMessage('개인 지침이 저장되었습니다.');
+      setTimeout(() => {
+        setSettingsMessage('');
+        closeSettings();  // 메시지 보여주고 모달 닫기
+      }, 1500);  // 1.5초 후 사라짐
     } catch {
       setSettingsError('개인 지침 저장에 실패했습니다.');
     } finally {
@@ -153,6 +157,7 @@ function SidebarFooter({ userInfo, onGoDashboard, onLogout }) {
                     저장
                   </button>
                 </div>
+                {settingsMessage && <p className="settings-msg success settings-inline-msg">{settingsMessage}</p>}
               </section>
 
               <section className="settings-section">
@@ -184,7 +189,7 @@ function SidebarFooter({ userInfo, onGoDashboard, onLogout }) {
               </section>
 
               {settingsError && <p className="settings-msg error settings-inline-msg">{settingsError}</p>}
-              {settingsMessage && <p className="settings-msg success settings-inline-msg">{settingsMessage}</p>}
+              
             </div>
           </div>
         </div>

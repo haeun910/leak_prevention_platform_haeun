@@ -27,8 +27,8 @@ RISK_MAP = {
     "차량번호": "medium",
     "사업자등록번호": "medium", 
     "법인등록번호": "medium",
-    '''"IPv4": "low", 
-    "IPv6": "low", '''
+    # "IPv4": "low", 
+    # "IPv6": "low", 
     "현금영수증": "low",
 }
 
@@ -37,6 +37,7 @@ def _get_risk(entity_type: str) -> str:
         if key in entity_type:
             return level
     return "medium"
+
 
 # < 정규표현식 탐지 > ──────────────────────────────────────────
 # 1. 전화번호

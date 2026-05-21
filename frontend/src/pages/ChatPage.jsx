@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import Sidebar from '../features/chat/components/sidebar/Sidebar';
 import MessageBubble from '../features/chat/components/window/MessageBubble';
 import InputBox from '../features/chat/components/input/InputBox';
@@ -30,6 +30,7 @@ function ChatPage() {
     []
   );
   const userEmail = userInfo.email || 'guest';
+  const { chatId: urlChatId } = useParams();
 
   // ===== 공통 상태 관리: useChatProject hook =====
   // chats / projects 로딩과 CRUD 로직을 hook으로 분리
@@ -66,7 +67,7 @@ function ChatPage() {
     if (!isDataLoaded) return;
     if (currentChatId) return;
 
-    const targetChatId = location.state?.chatId;
+    const targetChatId = urlChatId || location.state?.chatId;
     if (!targetChatId) return;
 
     if (!chats.some(chat => chat.id === targetChatId)) {
@@ -112,6 +113,7 @@ function ChatPage() {
 
   // ===== 채팅 선택 =====
   const handleSelectChat = (chatId) => {
+    navigate(`/chat/${chatId}`);
     setCurrentChatId(chatId);
     const selected = chats.find(chat => chat.id === chatId);
     if (selected && selected.messages.length === 0) {

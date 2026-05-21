@@ -631,6 +631,7 @@
 
 .settings-inline-msg {
   padding: 0 28px;
+  margin-top: 8px;
 }
 
 /* 오류 / 성공 메시지 */
