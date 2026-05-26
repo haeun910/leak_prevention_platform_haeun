@@ -9,7 +9,7 @@ from app.pipeline.regex_layer import detect_and_mask
 from app.pipeline.ner_layer import apply_ner_layer
 from app.pipeline.risk_layer import apply_risk_layer
 from app.llm.openai import get_openai_llm
-from app.llm.anthropic import get_anthropic_llm
+from app.llm.claude import get_claude_llm
 from app.llm.gemini import get_gemini_llm
 from app.core.database import (
     DepartmentChangeRequest,
@@ -30,7 +30,7 @@ router = APIRouter()
 
 LLM_PROVIDERS = {
     "openai": get_openai_llm,
-    "anthropic": get_anthropic_llm,
+    "claude": get_claude_llm,
     "gemini": get_gemini_llm,
 }
 

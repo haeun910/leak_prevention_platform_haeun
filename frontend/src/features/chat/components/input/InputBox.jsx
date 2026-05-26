@@ -15,7 +15,7 @@ const RISK_META = {
 
 const LLM_OPTIONS = [
   { value: 'openai', label: 'GPT', detail: 'OpenAI' },
-  { value: 'anthropic', label: 'Claude', detail: 'Anthropic' },
+  { value: 'claude', label: 'Claude', detail: 'claude' },
   { value: 'gemini', label: 'Gemini', detail: 'Google' },
 ];
 

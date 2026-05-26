@@ -1,3 +1,4 @@
+import ReactMarkdown from 'react-markdown'
 import { useState } from 'react'
 import { Pencil, Check, X, ShieldAlert } from 'lucide-react'
 import RiskBadge from './RiskBadge'
@@ -46,7 +47,7 @@ export default function MessageBubble({ message, onEdit }) {
               rows={Math.max(2, draft.split('\n').length)}
             />
           ) : (
-            <p style={styles.text}>{message.content}</p>
+            <ReactMarkdown style={styles.text}>{message.content}</ReactMarkdown>
           )}
 
           {/* 수정 컨트롤 */}

@@ -20,12 +20,19 @@ from app.core.database import (
 from app.core.security import decode_token
 from app.schemas.models import DashboardStats, LogEntry
 
-
+# =====================================================
+# 공통 설정
+# =====================================================
 router = APIRouter()
 bearer = HTTPBearer()
 KST = timezone(timedelta(hours=9))
 
 
+# =====================================================
+# 유틸 함수
+# =====================================================
+
+# 타임스탬프 → KST 날짜로 변환
 def _to_kst_date(ts):
     """Return date in KST for both naive (assumed KST) and tz-aware timestamps."""
     if ts is None:
@@ -42,6 +49,11 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer
     return payload
 
 
+# =====================================================
+# 통계 요약 API
+# ====================================================
+
+# 대시보드 기본 통계 반환
 @router.get("/stats", response_model=DashboardStats)
 def get_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     total_requests = db.query(MaskingLog).count()
@@ -70,6 +82,7 @@ def _entity_count(message: ChatMessage) -> int:
     return len(message.entities or []) if isinstance(message.entities, list) else 0
 
 
+# 대시보드 상세 요약 반환
 @router.get("/dashboard/summary")
 def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     logs = db.query(MaskingLog).order_by(MaskingLog.timestamp.desc()).all()
@@ -140,6 +153,11 @@ def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_a
     }
 
 
+# =====================================================
+# 사용자 / 부서 통계 API
+# =====================================================
+
+# 사용자별 마스킹 통계 반환
 @router.get("/dashboard/users")
 def get_user_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     result = []
@@ -168,6 +186,7 @@ def get_user_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
         )
     return sorted(result, key=lambda item: item["masked_count"], reverse=True)
 
+# 부서별 마스킹 통계 반환
 
 @router.get("/dashboard/departments")
 def get_department_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
@@ -192,6 +211,10 @@ def get_department_stats(db: Session = Depends(get_db), _=Depends(get_current_ad
     return sorted(departments.values(), key=lambda item: item["masked_count"], reverse=True)
 
 
+# =====================================================
+# 마스킹 로그 조회 API
+# =====================================================
+
 @router.get("/logs", response_model=List[LogEntry])
 def get_logs(
     skip: int = Query(0, ge=0),
@@ -205,7 +228,11 @@ def get_logs(
         query = query.filter(MaskingLog.risk_level == risk_level)
     return query.order_by(MaskingLog.timestamp.desc()).offset(skip).limit(limit).all()
 
+# =====================================================
+# 사용자 관리 API
+# =====================================================
 
+# 전체 사용자 목록 조회
 @router.get("/users")
 def list_users(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     result = []
@@ -230,6 +257,7 @@ def list_users(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     return result
 
 
+# 사용자 정보 수정
 @router.patch("/users/{user_id}")
 def update_user(user_id: int, body: dict, db: Session = Depends(get_db), current_admin=Depends(get_current_admin)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -244,6 +272,7 @@ def update_user(user_id: int, body: dict, db: Session = Depends(get_db), current
     return {"ok": True}
 
 
+# 사용자 삭제
 @router.delete("/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db), current_admin=Depends(get_current_admin)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -263,6 +292,11 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_admin=Depen
     return {"ok": True}
 
 
+# =====================================================
+# 부서 변경 요청 API
+# =====================================================
+
+# 부서 변경 요청 목록 조회
 @router.get("/department-change-requests")
 def list_department_change_requests(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     rows = db.query(DepartmentChangeRequest).order_by(DepartmentChangeRequest.created_at.desc()).all()
@@ -282,6 +316,7 @@ def list_department_change_requests(db: Session = Depends(get_db), _=Depends(get
     ]
 
 
+# 부서 변경 요청 승인/거절/보류 처리
 @router.patch("/department-change-requests/{request_id}")
 def update_department_change_request(request_id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_admin)):
     row = db.query(DepartmentChangeRequest).filter(DepartmentChangeRequest.id == request_id).first()
@@ -303,7 +338,11 @@ def update_department_change_request(request_id: int, body: dict, db: Session = 
     db.commit()
     return {"ok": True}
 
+# =====================================================
+# 예외 요청 API (마스킹 제외 키워드 요청)
+# =====================================================
 
+# 예외 요청 목록 조회
 @router.get("/exception-requests")
 def list_exception_requests(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     rows = db.query(ExceptionRequest).order_by(ExceptionRequest.created_at.desc()).all()
@@ -320,6 +359,7 @@ def list_exception_requests(db: Session = Depends(get_db), _=Depends(get_current
         for row in rows
     ]
 
+# 예외 요청 직접 생성
 
 @router.post("/exception-requests")
 def create_exception_request(body: dict, db: Session = Depends(get_db), _=Depends(get_current_admin)):

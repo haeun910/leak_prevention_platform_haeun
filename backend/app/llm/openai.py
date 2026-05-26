@@ -13,7 +13,7 @@ class OpenAILLM(BaseLLM):
 
     async def chat(self, messages: List[Dict[str, str]]) -> str:
         if not settings.OPENAI_API_KEY:
-            raise RuntimeError("OPENAI_API_KEY is not configured. Check backend/.env.")
+            raise RuntimeError("OPEN_API_KEY가 설정되지 않았습니다.")
 
         async with httpx.AsyncClient() as http_client:
             client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY, http_client=http_client)

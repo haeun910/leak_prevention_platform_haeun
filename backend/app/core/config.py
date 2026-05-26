@@ -26,8 +26,8 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
 
-    ANTHROPIC_API_KEY: str = ""
-    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-latest"
+    CLAUDE_API_KEY: str = ""
+    CLAUDE_MODEL: str = "claude-sonnet-4-6"
 
     class Config:
         env_file = ".env"
