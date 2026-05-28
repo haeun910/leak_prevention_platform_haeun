@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import LoginAccess from './pages/LoginAccess';
 import Dashboard from './pages/Dashboard';
 import ChatPage from './pages/ChatPage';
 import Register from './pages/Register';
@@ -8,9 +9,11 @@ import UserApproval from './features/dashboard/pages/UserApproval';
 import UserManagementPage from './features/dashboard/pages/UserManagementPage';
 import UserStatsPage from './features/dashboard/pages/UserStatsPage';
 import DepartmentStatsPage from './features/dashboard/pages/DepartmentStatsPage';
+import DepartmentRequestsPage from './features/dashboard/pages/DepartmentRequestsPage';
 import ExceptionRequestsPage from './features/dashboard/pages/ExceptionRequestsPage';
 import ExceptionKeywordsPage from './features/dashboard/pages/ExceptionKeywordsPage';
 import SecurityLogsPage from './features/dashboard/pages/SecurityLogsPage';
+import ReportPage from './features/dashboard/pages/ReportPage';
 import { ModalProvider } from './components/AppModal';
 
 // =====================================================
@@ -25,12 +28,12 @@ import { ModalProvider } from './components/AppModal';
 // 현재는 목업 단계이므로 임시 허용
 // 백엔드 연동 시 JWT 또는 서버 세션 기반 권한 검증으로 교체 필요
 function PrivateRoute({ children, requiredRole }) {
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-  const auth = JSON.parse(localStorage.getItem('auth-Storage') || '{}');
+  const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || localStorage.getItem('userInfo') || '{}');
+  const auth = JSON.parse(sessionStorage.getItem('auth-Storage') || localStorage.getItem('auth-Storage') || '{}');
   const token = auth?.state?.token;
 
   if (!token || !userInfo.email) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // [버그 수정] pending / rejected 계정 차단
@@ -40,7 +43,7 @@ function PrivateRoute({ children, requiredRole }) {
   // 이 처리가 없으면 localStorage의 userInfo.role을 직접 수정하거나
   // 로그인 직후 URL을 입력해 보호 페이지에 진입할 수 있었음
   if (userInfo.role === 'pending' || userInfo.role === 'rejected') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (requiredRole && userInfo.role !== requiredRole) {
@@ -65,6 +68,7 @@ function App() {
       <Routes>
         {/* 공개 페이지 */}
         <Route path="/" element={<Login />} />
+        <Route path="/login" element={<LoginAccess />} />
         <Route path="/register" element={<Register />} />
 
         {/* 보호된 페이지 - 로그인 필수 */}
@@ -127,6 +131,14 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/department-requests"
+          element={
+            <PrivateRoute requiredRole="admin">
+              <DepartmentRequestsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/dashboard/exceptions"
           element={
             <PrivateRoute requiredRole="admin">
@@ -147,6 +159,14 @@ function App() {
           element={
             <PrivateRoute requiredRole="admin">
               <SecurityLogsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/reports"
+          element={
+            <PrivateRoute requiredRole="admin">
+              <ReportPage />
             </PrivateRoute>
           }
         />

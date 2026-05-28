@@ -1,6 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useModal } from '../../../components/AppModal';
 import api from '../../../api/client';
+import { labelEntityType } from '../../../utils/entityLabels';
+
+const mapApiMessage = (message) => ({
+  id: message.id,
+  role: message.role,
+  text: message.content,
+  timestamp: message.timestamp,
+  wasMasked: message.was_masked,
+  isSanitized: true,
+  entities: message.entities || [],
+  riskLevel: message.risk_level || 'none',
+  detectedItems: [...new Set((message.entities || []).map((item) => labelEntityType(item.entity_type)))],
+});
+
+const mapApiProject = (project) => ({
+  id: project.id,
+  name: project.name,
+  color: project.color || '#667eea',
+  description: project.description || '',
+  instructions: project.instructions || '',
+  createdAt: project.created_at,
+  updatedAt: project.updated_at,
+});
 
 // =====================================================
 // useChatProject 커스텀 훅
@@ -10,9 +33,8 @@ import api from '../../../api/client';
 //   chats / projects 상태 관리 로직을 한 곳으로 통합
 //
 //   포함 내용:
-//   1) localStorage → 상태 초기 복원
-//   2) 상태 변경 시 localStorage 자동 저장 (isDataLoaded 가드 포함)
-//   3) 두 페이지에서 공통으로 쓰이는 채팅 / 프로젝트 조작 함수
+//   1) DB API → 상태 초기 복원
+//   2) 두 페이지에서 공통으로 쓰이는 채팅 / 프로젝트 조작 함수
 //
 // 반환값:
 //   chats, setChats          — 채팅 목록과 직접 업데이트 함수
@@ -44,15 +66,14 @@ export function useChatProject(userEmail) {
     let isMounted = true;
 
     const loadData = async () => {
-      const savedProjects = localStorage.getItem(`projects_${userEmail}`);
-      if (savedProjects) {
-        try { setProjects(JSON.parse(savedProjects)); } catch {}
-      }
-
       try {
-        const { data } = await api.get('/mask/conversations');
+        const [{ data: conversationData }, { data: projectData }] = await Promise.all([
+          api.get('/mask/conversations'),
+          api.get('/mask/projects'),
+        ]);
         if (!isMounted) return;
-        setChats(data.map((chat) => ({
+        setProjects(projectData.map(mapApiProject));
+        setChats(conversationData.map((chat) => ({
           id: chat.id,
           title: chat.title || '새 채팅',
           messages: [],
@@ -61,10 +82,8 @@ export function useChatProject(userEmail) {
           updatedAt: chat.updated_at,
         })));
       } catch {
-        const savedChats = localStorage.getItem(`chats_${userEmail}`);
-        if (savedChats) {
-          try { setChats(JSON.parse(savedChats)); } catch {}
-        }
+        setChats([]);
+        setProjects([]);
       } finally {
         if (isMounted) setIsDataLoaded(true);
       }
@@ -73,18 +92,6 @@ export function useChatProject(userEmail) {
     loadData();
     return () => { isMounted = false; };
   }, [userEmail]);
-
-  // ── 채팅 자동 저장 ──
-  useEffect(() => {
-    if (!isDataLoaded) return;
-    localStorage.setItem(`chats_${userEmail}`, JSON.stringify(chats));
-  }, [chats, userEmail, isDataLoaded]);
-
-  // ── 프로젝트 자동 저장 ──
-  useEffect(() => {
-    if (!isDataLoaded) return;
-    localStorage.setItem(`projects_${userEmail}`, JSON.stringify(projects));
-  }, [projects, userEmail, isDataLoaded]);
 
   // ── 채팅 삭제 ──
   // async: 커스텀 confirm 모달을 await한 후 삭제 실행
@@ -104,20 +111,12 @@ export function useChatProject(userEmail) {
   const loadChatMessages = async (chatId) => {
     try {
       const { data } = await api.get(`/mask/conversations/${chatId}/messages`);
+      if (!data.length) return;
       setChats(prev => prev.map(chat => (
         chat.id === chatId
           ? {
               ...chat,
-              messages: data.map((message) => ({
-                id: message.id,
-                role: message.role,
-                text: message.content,
-                timestamp: message.timestamp,
-                wasMasked: message.was_masked,
-                entities: message.entities || [],
-                riskLevel: message.risk_level || 'none',
-                detectedItems: [...new Set((message.entities || []).map((item) => item.entity_type))],
-              })),
+              messages: data.map(mapApiMessage),
             }
           : chat
       )));
@@ -143,7 +142,39 @@ export function useChatProject(userEmail) {
 
   // ── 채팅을 프로젝트에 추가 / 제거 ──
   // projectId가 null이면 미분류(분류되지 않음)로 이동
-  const addChatToProject = (chatId, projectId) => {
+  const createProject = async (projectData) => {
+    const { data } = await api.post('/mask/projects', {
+      id: crypto.randomUUID(),
+      ...projectData,
+    });
+    const project = mapApiProject(data);
+    setProjects(prev => [project, ...prev]);
+    return project;
+  };
+
+  const updateProject = async (projectId, projectData) => {
+    const { data } = await api.post('/mask/projects', {
+      id: projectId,
+      ...projectData,
+    });
+    const project = mapApiProject(data);
+    setProjects(prev => prev.map(p => (p.id === projectId ? project : p)));
+    return project;
+  };
+
+  const addChatToProject = async (chatId, projectId) => {
+    const chat = chats.find(c => c.id === chatId);
+    if (chat) {
+      try {
+        await api.post(`/mask/conversations/${chatId}/messages`, {
+          title: chat.title,
+          project_id: projectId,
+          messages: [],
+        });
+      } catch (err) {
+        console.error('채팅 프로젝트 이동 실패:', err);
+      }
+    }
     setChats(prev => prev.map(c =>
       c.id === chatId
         ? { ...c, projectId, updatedAt: new Date().toISOString() }
@@ -158,6 +189,12 @@ export function useChatProject(userEmail) {
   const deleteProject = async (targetProjectId) => {
     const ok = await showConfirm('프로젝트를 삭제하시겠습니까?\n(채팅은 "분류되지 않음"으로 이동됩니다)');
     if (!ok) return false;
+    try {
+      await api.delete(`/mask/projects/${targetProjectId}`);
+    } catch (err) {
+      console.error('프로젝트 삭제 실패:', err);
+      return false;
+    }
     setProjects(prev => prev.filter(p => p.id !== targetProjectId));
     setChats(prev => prev.map(c =>
       c.projectId === targetProjectId
@@ -174,6 +211,8 @@ export function useChatProject(userEmail) {
     deleteChat,
     loadChatMessages,
     renameChat,
+    createProject,
+    updateProject,
     addChatToProject,
     deleteProject,
   };

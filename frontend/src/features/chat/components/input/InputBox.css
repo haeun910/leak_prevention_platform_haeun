@@ -3,7 +3,7 @@
   align-items: center;
   gap: 12px;
   padding: 16px 0;
-  border-top: 1px solid #e5e5e5;
+  border-top: 0;
   background: white;
   width: 100%;
   box-sizing: border-box; /* padding 포함 */
@@ -276,8 +276,19 @@
   }
   
   .loading-spinner {
-    font-size: 16px;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: send-spin 0.75s linear infinite;
   }
+
+@keyframes send-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
   /* ========================================
    입력창 아래 안내 문구 영역
@@ -337,7 +348,7 @@
 /* Professional light composer override */
 .input-box {
   padding: 18px 0 20px;
-  border-top: 1px solid #dbe2ea;
+  border-top: 0;
   background: #ffffff;
 }
 
@@ -349,7 +360,7 @@
   border-color: #cfd8e3;
   border-radius: 14px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
 }
 
 .input-wrapper:focus-within {
@@ -381,4 +392,33 @@
 
 .notice-line {
   color: #7b8794;
+}
+
+/* ── 템플릿 라이브러리 토글 버튼 ── */
+.templates-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.templates-toggle-btn:hover {
+  border-color: #c7d2fe;
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
+.templates-toggle-btn.active {
+  background: #eef2ff;
+  color: #4f46e5;
+  border-color: #a5b4fc;
 }

@@ -9,6 +9,7 @@ import {
   PanelLeftOpen,
   Plus,
   Search,
+  ShieldCheck,
 } from 'lucide-react';
 import api from '../../../../api/client';
 import NewChatButton from './NewChatButton';
@@ -44,7 +45,7 @@ function Sidebar({
   // useMemo로 마운트 시 한 번만 파싱
   // 컴포넌트 본문에 직접 쓰면 렌더링(메뉴 열기·검색 등)마다 파싱이 반복 실행됨
   const userInfo = useMemo(
-    () => JSON.parse(localStorage.getItem('userInfo') || '{}'),
+    () => JSON.parse(sessionStorage.getItem('userInfo') || localStorage.getItem('userInfo') || '{}'),
     []
   );
 
@@ -65,9 +66,11 @@ function Sidebar({
 
   // 로그아웃 처리
   const handleLogout = () => {
+    sessionStorage.removeItem('userInfo');
+    sessionStorage.removeItem('auth-Storage');
     localStorage.removeItem('userInfo');
     localStorage.removeItem('auth-Storage');
-    navigate('/');
+    navigate('/login');
   };
 
   // 드롭다운 메뉴 열기 / 닫기
@@ -186,8 +189,10 @@ function Sidebar({
         <div className="sidebar-header">
           {!isCollapsed && (
             <div className="sidebar-brand">
-              <span className="sidebar-brand-mark">AI</span>
-              <span className="sidebar-brand-text">Secure Workspace</span>
+              <span className="sidebar-brand-mark" aria-hidden="true">
+                <ShieldCheck size={18} strokeWidth={2.2} />
+              </span>
+              <span className="sidebar-brand-text">Veil Workspace</span>
             </div>
           )}
           <button
@@ -386,8 +391,6 @@ function Sidebar({
             ========================= */}
         {uncategorizedChats.length > 0 && (
           <div className="uncategorized-section">
-            <div className="section-label">분류되지 않은 채팅 ({uncategorizedChats.length})</div>
-
             {Object.entries(groupedUncategorized).map(([groupName, groupChats]) => {
               if (groupChats.length === 0) return null;
 
@@ -493,7 +496,7 @@ function Sidebar({
       {isCollapsed ? (
         <div className="collapsed-footer">
           <button className="collapsed-avatar" onClick={() => setIsCollapsed(false)} title={userInfo.name || '사용자'}>
-            {userInfo.name ? userInfo.name.charAt(0) : 'U'}
+            <ShieldCheck size={19} strokeWidth={2.2} />
           </button>
         </div>
       ) : (

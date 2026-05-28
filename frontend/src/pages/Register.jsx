@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, UserPlus } from 'lucide-react';
 import { useModal } from '../components/AppModal';
-import { register as registerApi } from '../api/client';
+import { getDepartments, register as registerApi } from '../api/client';
 import './Login.css';
 
 function Register() {
@@ -16,7 +16,14 @@ function Register() {
     confirmPassword: '',
   });
   const [errorMsg, setErrorMsg] = useState('');
+  const [departments, setDepartments] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    getDepartments()
+      .then(({ data }) => setDepartments(data.departments || []))
+      .catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -70,8 +77,8 @@ function Register() {
 
       const token = data.access_token;
       const user = data.user;
-      localStorage.setItem('auth-Storage', JSON.stringify({ state: { token, user } }));
-      localStorage.setItem('userInfo', JSON.stringify({
+      sessionStorage.setItem('auth-Storage', JSON.stringify({ state: { token, user } }));
+      sessionStorage.setItem('userInfo', JSON.stringify({
         email: user.username,
         role: user.role,
         name: user.name,
@@ -94,7 +101,7 @@ function Register() {
             <ShieldCheck size={22} />
           </div>
           <div>
-            <strong>SecureAI</strong>
+            <strong>Veil AI</strong>
             <span>Enterprise Masking Platform</span>
           </div>
         </nav>
@@ -182,16 +189,9 @@ function Register() {
               className="department-select"
             >
               <option value="">부서 선택 (필수)</option>
-              <option value="기획">기획</option>
-              <option value="개발">개발</option>
-              <option value="마케팅">마케팅</option>
-              <option value="영업">영업</option>
-              <option value="인사">인사</option>
-              <option value="재무">재무</option>
-              <option value="법무">법무</option>
-              <option value="디자인">디자인</option>
-              <option value="운영">운영</option>
-              <option value="경영지원">경영지원</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
             </select>
           </div>
 

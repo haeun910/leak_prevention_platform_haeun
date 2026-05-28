@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Trash2, UserCog } from 'lucide-react';
+import { Search, Trash2, UserX } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import { deleteAdminUser, getAdminUsers, updateAdminUser } from '../services/dashboardApi';
 import { useModal } from '../../../components/AppModal';
@@ -9,13 +9,14 @@ const roleLabels = {
   admin: '관리자',
   user: '일반 사용자',
   pending: '승인 대기',
-  rejected: '거절됨',
+  rejected: '퇴사/비활성',
 };
 
 function UserManagementPage() {
   const { showConfirm, showAlert } = useModal();
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -32,20 +33,39 @@ function UserManagementPage() {
     load();
   }, []);
 
+  const departments = useMemo(() => {
+    const names = users
+      .map((user) => user.department || '미지정')
+      .filter(Boolean);
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'ko-KR'));
+  }, [users]);
+
   const visibleUsers = useMemo(() => {
     const keyword = query.trim().toLowerCase();
-    if (!keyword) return users;
     return users.filter((user) => [
       user.username,
       user.name,
       user.department,
       roleLabels[user.role] || user.role,
-    ].some((value) => String(value || '').toLowerCase().includes(keyword)));
-  }, [query, users]);
+    ].some((value) => !keyword || String(value || '').toLowerCase().includes(keyword))
+      && (departmentFilter === 'all' || (user.department || '미지정') === departmentFilter));
+  }, [departmentFilter, query, users]);
 
   const updateRole = async (user, role) => {
     await updateAdminUser(user.id, { role });
     load();
+  };
+
+  const terminateUser = async (user) => {
+    const ok = await showConfirm(`${user.name || user.username} 계정을 퇴사 처리하시겠습니까?`);
+    if (!ok) return;
+    try {
+      await updateAdminUser(user.id, { role: 'rejected' });
+      await showAlert('계정을 퇴사 처리했습니다.');
+      load();
+    } catch (err) {
+      await showAlert(err.response?.data?.detail || '퇴사 처리에 실패했습니다.');
+    }
   };
 
   const removeUser = async (user) => {
@@ -62,24 +82,37 @@ function UserManagementPage() {
 
   return (
     <DashboardLayout
-      title="사용자 관리"
-      description="조직 구성원의 계정과 권한을 관리합니다."
+      title="사용자 계정 관리"
+      description="조직 구성원의 계정 권한과 계정 상태를 관리합니다."
     >
       {error && <div className="dashboard-state error">{error}</div>}
       <section className="dashboard-card user-management-card">
         <div className="dashboard-card-header dashboard-card-header-row">
           <div>
             <h2>전체 사용자</h2>
-            <p>총 {users.length}개 계정</p>
+            <p>총 {users.length}개 계정 중 {visibleUsers.length}개 표시</p>
           </div>
-          <label className="dashboard-search">
-            <Search size={16} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="이름, 아이디, 부서 검색"
-            />
-          </label>
+          <div className="approval-member-tools">
+            <label className="dashboard-search">
+              <Search size={16} />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="이름, 아이디, 부서 검색"
+              />
+            </label>
+            <select
+              className="approval-filter-select"
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              aria-label="부서 필터"
+            >
+              <option value="all">전체 부서</option>
+              {departments.map((department) => (
+                <option key={department} value={department}>{department}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {loading ? <div className="dashboard-state">불러오는 중입니다.</div> : (
@@ -100,7 +133,6 @@ function UserManagementPage() {
                   <tr key={user.id}>
                     <td>
                       <div className="user-cell">
-                        <span className="user-avatar-small">{(user.name || user.username || 'U').charAt(0)}</span>
                         <div>
                           <strong>{user.name || '-'}</strong>
                           <span>{user.username}</span>
@@ -117,8 +149,17 @@ function UserManagementPage() {
                           <option value="user">일반 사용자</option>
                           <option value="admin">관리자</option>
                           <option value="pending">승인 대기</option>
-                          <option value="rejected">거절됨</option>
+                          <option value="rejected">퇴사/비활성</option>
                         </select>
+                        <button
+                          className="warning"
+                          type="button"
+                          onClick={() => terminateUser(user)}
+                          disabled={user.role === 'rejected'}
+                        >
+                          <UserX size={14} />
+                          퇴사 처리
+                        </button>
                         <button className="danger" type="button" onClick={() => removeUser(user)}>
                           <Trash2 size={14} />
                           삭제
@@ -132,14 +173,6 @@ function UserManagementPage() {
             </table>
           </div>
         )}
-      </section>
-
-      <section className="dashboard-card user-guide-card">
-        <UserCog size={20} />
-        <div>
-          <h2>계정 정리</h2>
-          <p>퇴사 또는 부서 이동 등으로 접근 권한이 달라진 계정을 이 화면에서 삭제하거나 권한을 변경할 수 있습니다.</p>
-        </div>
       </section>
     </DashboardLayout>
   );

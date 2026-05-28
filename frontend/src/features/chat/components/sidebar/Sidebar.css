@@ -71,7 +71,7 @@
   border: none;
   background: transparent;
   padding: 8px 4px;
-  font-size: 14px;
+  font-size: 15px;
   color: #1f1f1f;
   outline: none;
 }
@@ -232,12 +232,13 @@
 }
 
 .sidebar-bottom-stack {
-  background: white;
+  background: #f7f7f8;
   border-top: 1px solid #e5e5e5;
 }
 
 .sidebar-bottom-stack .sidebar-footer {
   border-top: 0;
+  background: #f7f7f8;
 }
 
 .footer-exception-btn {
@@ -283,13 +284,13 @@
 }
 
 .user-name {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 750;
   color: #1f1f1f;
 }
 
 .user-role {
-  font-size: 11px;
+  font-size: 13px;
   color: #8e8e8e;
 }
 
@@ -418,7 +419,7 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.15s, background 0.15s, color 0.15s;
 }
 
@@ -597,6 +598,39 @@
 
 .settings-field-input:focus {
   border-color: #667eea;
+}
+
+.settings-field-column {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.settings-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1f2937;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.settings-textarea:focus {
+  border-color: #667eea;
+}
+
+.settings-request-row {
+  margin-top: 4px;
+  padding: 12px 0;
+}
+
+.settings-inline-msg {
+  padding: 0 28px;
 }
 
 /* 오류 / 성공 메시지 */
@@ -1072,7 +1106,7 @@
 .sidebar-brand-text {
   overflow: hidden;
   color: #172033;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1107,6 +1141,8 @@
 .new-chat-btn {
   border-color: #cfd8e3;
   color: #172033;
+  font-size: 15px;
+  font-weight: 700;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
@@ -1143,6 +1179,11 @@
   letter-spacing: 0;
 }
 
+.group-label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .history-item {
   min-height: 36px;
   border-radius: 10px;
@@ -1159,13 +1200,22 @@
   color: #0f344e;
 }
 
-.history-title,
+.history-title {
+  color: #253044;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .project-name {
   color: #253044;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .new-project-btn {
   color: #475569;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .new-project-btn:hover {
@@ -1185,6 +1235,11 @@
   border-top-color: #dbe2ea;
 }
 
+.sidebar-bottom-stack,
+.sidebar-bottom-stack .sidebar-footer {
+  background: #f7f7f8;
+}
+
 .user-avatar,
 .settings-avatar,
 .collapsed-avatar {
@@ -1193,6 +1248,8 @@
 
 .dashboard-btn {
   background: #16415f;
+  font-size: 15px;
+  font-weight: 800;
   box-shadow: none;
 }
 
@@ -1205,6 +1262,7 @@
   background: #f8fafc;
   border-color: #dbe2ea;
   color: #475569;
+  font-size: 14px;
 }
 
 .logout-btn:hover {
@@ -1222,8 +1280,8 @@
   border: 1px solid #d7e0ea;
   border-radius: 14px;
   color: #334155;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 750;
   box-shadow: 0 6px 18px rgba(15, 52, 78, 0.06);
 }
 

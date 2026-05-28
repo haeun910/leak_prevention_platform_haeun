@@ -1,13 +1,6 @@
-// 사이드바 검색 컴포넌트
-// 역할:
-// 1) 채팅 검색 입력창 표시
-// 2) 사용자가 입력한 검색어를 부모 컴포넌트(Sidebar.jsx)로 전달
-// 3) 검색어가 있을 때 X 버튼을 보여주고, 클릭 시 검색어 초기화
-// 4) 실제 채팅 필터링 로직은 Sidebar.jsx에 남겨둠
 function SidebarSearch({ searchText, onChangeSearchText, onClearSearchText }) {
   return (
     <div className="search-wrapper">
-      {/* 검색 아이콘 */}
       <svg
         width="16"
         height="16"
@@ -16,26 +9,32 @@ function SidebarSearch({ searchText, onChangeSearchText, onClearSearchText }) {
         stroke="currentColor"
         strokeWidth="2"
         className="search-icon"
+        aria-hidden="true"
       >
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="m21 21-4.35-4.35"></path>
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
       </svg>
 
-      {/* 검색 입력창 */}
       <input
-        type="text"
+        type="search"
         className="search-input"
+        name="veil-chat-search"
         placeholder="검색"
         value={searchText}
-        onChange={(e) => onChangeSearchText(e.target.value)}
+        onChange={(event) => onChangeSearchText(event.target.value)}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck="false"
+        inputMode="search"
       />
 
-      {/* 검색어가 있을 때만 초기화 버튼 표시 */}
       {searchText && (
         <button
           className="search-clear-btn"
           onClick={onClearSearchText}
           title="검색어 지우기"
+          type="button"
         >
           <svg
             width="14"
@@ -44,9 +43,10 @@ function SidebarSearch({ searchText, onChangeSearchText, onClearSearchText }) {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
+            aria-hidden="true"
           >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       )}

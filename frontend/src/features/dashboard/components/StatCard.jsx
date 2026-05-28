@@ -5,9 +5,13 @@
 // 3) icon props로 lucide-react 아이콘 컴포넌트를 받아 화면에 표시
 // 4) 백엔드 데이터가 들어와도 props만 바꾸면 그대로 사용 가능
 
-function StatCard({ icon: Icon, title, value, description, accentText }) {
+function StatCard({ icon: Icon, title, value, accentText, isActive = false, onClick }) {
   return (
-    <article className="stat-card">
+    <button
+      className={`stat-card ${isActive ? 'active' : ''} ${onClick ? 'clickable' : ''}`}
+      onClick={onClick}
+      type="button"
+    >
       <div className="stat-card-top">
         {/* lucide-react 아이콘 영역 */}
         <div className="stat-icon">
@@ -19,8 +23,7 @@ function StatCard({ icon: Icon, title, value, description, accentText }) {
 
       <div className="stat-value">{value}</div>
       <div className="stat-title">{title}</div>
-      <p className="stat-description">{description}</p>
-    </article>
+    </button>
   );
 }
 

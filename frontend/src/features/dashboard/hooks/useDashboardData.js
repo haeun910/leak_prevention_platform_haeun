@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, CalendarCheck, ClipboardList, ShieldCheck } from 'lucide-react';
-import { getDashboardOverview, getDepartmentStats } from '../services/dashboardApi';
+import { getDashboardOverview, getDepartmentStats, getUserStats } from '../services/dashboardApi';
+import { formatEntityTypes, isDeprecatedEntityType, labelEntityType } from '../../../utils/entityLabels';
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString();
@@ -10,6 +11,7 @@ function useDashboardData() {
   const [period, setPeriod] = useState('day');
   const [overview, setOverview] = useState(null);
   const [departmentRows, setDepartmentRows] = useState([]);
+  const [userRows, setUserRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -20,13 +22,15 @@ function useDashboardData() {
       setLoading(true);
       setError('');
       try {
-        const [overviewRes, deptRes] = await Promise.all([
+        const [overviewRes, deptRes, userRes] = await Promise.all([
           getDashboardOverview(),
           getDepartmentStats(),
+          getUserStats(),
         ]);
         if (!mounted) return;
         setOverview(overviewRes.data);
         setDepartmentRows(deptRes.data);
+        setUserRows(userRes.data);
       } catch (err) {
         if (mounted) setError(err.response?.data?.detail || '대시보드 데이터를 불러오지 못했습니다.');
       } finally {
@@ -47,7 +51,6 @@ function useDashboardData() {
         id: 'todayMasked',
         title: '오늘 마스킹 건수',
         value: formatNumber(data.today_masked),
-        description: '오늘 감지 및 마스킹된 항목 수',
         accentText: '일간',
         icon: CalendarCheck,
       },
@@ -55,7 +58,6 @@ function useDashboardData() {
         id: 'totalMasked',
         title: '전체 마스킹 건수',
         value: formatNumber(data.total_masked),
-        description: `${formatNumber(data.total_requests)}건의 요청에서 집계`,
         accentText: '누적',
         icon: ShieldCheck,
       },
@@ -63,7 +65,6 @@ function useDashboardData() {
         id: 'monthlyMasked',
         title: '이번 달 마스킹 건수',
         value: formatNumber(data.month_masked),
-        description: '이번 달 발생한 마스킹 처리 수',
         accentText: '월간',
         icon: BarChart3,
       },
@@ -71,7 +72,6 @@ function useDashboardData() {
         id: 'pendingRequests',
         title: '대기 중 예외 요청',
         value: formatNumber(data.pending_exception_requests),
-        description: '관리자 검토가 필요한 요청',
         accentText: '확인 필요',
         icon: ClipboardList,
       },
@@ -79,27 +79,57 @@ function useDashboardData() {
   }, [overview]);
 
   const maskingStats = overview?.masking_stats?.[period]?.length
-    ? overview.masking_stats[period]
+    ? overview.masking_stats[period].map((item) => ({ ...item, count: Number(item.count || 0) }))
     : [{ label: '데이터 없음', count: 0 }];
 
   const categories = overview?.categories?.length
-    ? overview.categories
-    : [{ category: '데이터 없음', count: 0 }];
+    ? Object.values(
+        overview.categories.reduce((acc, item) => {
+          if (isDeprecatedEntityType(item.category)) return acc;
+          const category = labelEntityType(item.category);
+          if (!category) return acc;
+          acc[category] = acc[category] || { category, count: 0 };
+          acc[category].count += Number(item.count || 0);
+          return acc;
+        }, {})
+      )
+    : [];
 
   const departments = departmentRows.length
     ? departmentRows.map((item) => ({
         department: item.department,
-        count: item.masked_count,
+        count: Number(item.masked_count || 0),
+        userCount: Number(item.user_count || 0),
+        conversationCount: Number(item.conversation_count || 0),
+        messageCount: Number(item.message_count || 0),
+        maskedMessageCount: Number(item.masked_message_count || 0),
+        highRiskCount: Number(item.high_risk_count || 0),
       }))
     : [{ department: '데이터 없음', count: 0 }];
 
-  const recentRequests = (overview?.recent_logs || []).map((log) => ({
-    id: log.id,
-    keyword: log.entity_types,
-    requester: log.session_id || '-',
-    department: log.risk_level,
-    reason: `${formatNumber(log.masked_count)}개 항목 마스킹`,
-    status: log.risk_level,
+  const recentRequests = (overview?.recent_logs || [])
+    .map((log) => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      keyword: formatEntityTypes(log.entity_types),
+      riskLevel: log.risk_level || 'none',
+      maskedCount: Number(log.masked_count || 0),
+    }))
+    .filter((log) => log.keyword !== '-');
+
+  const rawSummary = overview?.summary || {};
+  const recentLogs = (overview?.recent_logs || []).filter((log) => formatEntityTypes(log.entity_types) !== '-');
+  const users = userRows.map((item) => ({
+    id: item.user_id,
+    username: item.username,
+    name: item.name,
+    department: item.department,
+    role: item.role,
+    conversationCount: Number(item.conversation_count || 0),
+    messageCount: Number(item.message_count || 0),
+    maskedMessageCount: Number(item.masked_message_count || 0),
+    maskedCount: Number(item.masked_count || 0),
+    highRiskCount: Number(item.high_risk_count || 0),
   }));
 
   return {
@@ -107,9 +137,12 @@ function useDashboardData() {
     setPeriod,
     summary,
     maskingStats,
-    categories,
+    categories: categories.length ? categories : [{ category: '데이터 없음', count: 0 }],
     departments,
     recentRequests,
+    rawSummary,
+    recentLogs,
+    users,
     loading,
     error,
   };

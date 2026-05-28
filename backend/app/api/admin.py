@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.database import (
     ChatConversation,
     ChatMessage,
+    DepartmentChangeRequest,
     ExceptionKeyword,
     ExceptionRequest,
     MaskingLog,
@@ -23,6 +24,15 @@ from app.schemas.models import DashboardStats, LogEntry
 router = APIRouter()
 bearer = HTTPBearer()
 KST = timezone(timedelta(hours=9))
+
+
+def _to_kst_date(ts):
+    """Return date in KST for both naive (assumed KST) and tz-aware timestamps."""
+    if ts is None:
+        return None
+    if ts.tzinfo is not None:
+        return ts.astimezone(KST).date()
+    return ts.date()
 
 
 def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer)):
@@ -63,8 +73,10 @@ def _entity_count(message: ChatMessage) -> int:
 @router.get("/dashboard/summary")
 def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     logs = db.query(MaskingLog).order_by(MaskingLog.timestamp.desc()).all()
-    today = datetime.now(KST).date()
-    month = datetime.now(KST).month
+    now_kst = datetime.now(KST)
+    today = now_kst.date()
+    this_month = now_kst.month
+    this_year = now_kst.year
 
     by_day = Counter()
     by_month = Counter()
@@ -73,10 +85,11 @@ def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_a
 
     for log in logs:
         count = log.masked_count or 0
-        if log.timestamp:
-            by_day[log.timestamp.strftime("%m/%d")] += count
-            by_month[log.timestamp.strftime("%Y-%m")] += count
-            by_year[str(log.timestamp.year)] += count
+        kst_date = _to_kst_date(log.timestamp)
+        if kst_date:
+            by_day[kst_date.strftime("%m/%d")] += count
+            by_month[kst_date.strftime("%Y-%m")] += count
+            by_year[str(kst_date.year)] += count
         if log.entity_types:
             for entity_type in log.entity_types.split(","):
                 entity_type = entity_type.strip()
@@ -90,12 +103,14 @@ def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_a
             "today_masked": sum(
                 log.masked_count or 0
                 for log in logs
-                if log.timestamp and log.timestamp.date() == today
+                if _to_kst_date(log.timestamp) == today
             ),
             "month_masked": sum(
                 log.masked_count or 0
                 for log in logs
-                if log.timestamp and log.timestamp.month == month
+                if _to_kst_date(log.timestamp) is not None
+                and _to_kst_date(log.timestamp).month == this_month
+                and _to_kst_date(log.timestamp).year == this_year
             ),
             "high_risk_count": sum(1 for log in logs if (log.risk_level or "").lower() == "high"),
             "pending_exception_requests": db.query(ExceptionRequest)
@@ -244,6 +259,47 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_admin=Depen
     for conversation in conversations:
         db.delete(conversation)
     db.delete(user)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/department-change-requests")
+def list_department_change_requests(db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    rows = db.query(DepartmentChangeRequest).order_by(DepartmentChangeRequest.created_at.desc()).all()
+    return [
+        {
+            "id": row.id,
+            "user_id": row.user_id,
+            "requester": row.requester,
+            "current_department": row.current_department,
+            "requested_department": row.requested_department,
+            "reason": row.reason,
+            "status": row.status,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+        }
+        for row in rows
+    ]
+
+
+@router.patch("/department-change-requests/{request_id}")
+def update_department_change_request(request_id: int, body: dict, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    row = db.query(DepartmentChangeRequest).filter(DepartmentChangeRequest.id == request_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="부서 변경 요청을 찾을 수 없습니다.")
+
+    status_value = body.get("status")
+    if status_value not in {"approved", "rejected", "pending"}:
+        raise HTTPException(status_code=400, detail="올바른 상태값이 아닙니다.")
+
+    row.status = status_value
+    row.updated_at = datetime.now(KST)
+
+    if row.status == "approved":
+        user = db.query(User).filter(User.id == row.user_id).first()
+        if user:
+            user.department = row.requested_department
+
     db.commit()
     return {"ok": True}
 

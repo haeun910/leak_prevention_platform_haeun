@@ -13,7 +13,7 @@ function ProjectPage() {
   const navigate = useNavigate();
 
   // 로그인한 사용자 정보 — ChatPage와 동일하게 useMemo로 마운트 시 한 번만 파싱
-  const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+  const userInfo = useMemo(() => JSON.parse(sessionStorage.getItem('userInfo') || localStorage.getItem('userInfo') || '{}'), []);
   const userEmail = userInfo.email || 'guest';
 
   // ===== 공유 상태 — useChatProject hook =====
@@ -25,6 +25,7 @@ function ProjectPage() {
     isDataLoaded,
     deleteChat,
     renameChat,
+    updateProject: saveProjectToDb,
     addChatToProject,
     deleteProject,
   } = useChatProject(userEmail);
@@ -60,38 +61,43 @@ function ProjectPage() {
   // 프로젝트 공통 업데이트 함수
   // - 이름 / 색상 / 설명 / AI 지시사항 모두 여기로 갱신
   // ========================================
-  const updateProject = (updates) => {
+  const updateProject = async (updates) => {
+    const nextProjectData = { ...project, ...updates };
+    const savedProject = await saveProjectToDb(projectId, {
+      name: nextProjectData.name,
+      color: nextProjectData.color,
+      description: nextProjectData.description || '',
+      instructions: nextProjectData.instructions || '',
+    });
+
     const updatedProjects = projects.map((p) =>
       p.id === projectId
-        ? { ...p, ...updates, updatedAt: new Date().toISOString() }
+        ? savedProject
         : p
     );
 
     setProjects(updatedProjects);
 
-    const updatedProject = updatedProjects.find((p) => p.id === projectId);
-    setProject(updatedProject);
+    setProject(savedProject);
 
     // 설명/지시사항 local state도 동기화
-    if (updatedProject) {
-      setTempDescription(updatedProject.description || '');
-      setTempInstructions(updatedProject.instructions || '');
-    }
+    setTempDescription(savedProject.description || '');
+    setTempInstructions(savedProject.instructions || '');
   };
 
   // ========================================
   // 프로젝트 설명 저장
   // ========================================
-  const handleSaveDescription = () => {
-    updateProject({ description: tempDescription });
+  const handleSaveDescription = async () => {
+    await updateProject({ description: tempDescription });
     setIsEditingDescription(false);
   };
 
   // ========================================
   // AI 지시사항 저장
   // ========================================
-  const handleSaveInstructions = () => {
-    updateProject({ instructions: tempInstructions });
+  const handleSaveInstructions = async () => {
+    await updateProject({ instructions: tempInstructions });
     setIsEditingInstructions(false);
   };
 
@@ -113,7 +119,7 @@ function ProjectPage() {
     };
 
     setChats((prev) => [newChat, ...prev]);
-    navigate('/chat', { state: { chatId: newChat.id } });
+    navigate('/chat', { state: { chatId: newChat.id, projectId } });
   };
 
   // ========================================
@@ -158,31 +164,16 @@ function ProjectPage() {
   // ProjectModal에서 수정 내용 저장
   // - 이름 / 색상 / 설명 / AI 지시사항 모두 한 번에 저장
   // ========================================
-  const handleUpdateProject = (targetProjectId, projectData) => {
-    const updatedProjects = projects.map((proj) =>
-      proj.id === targetProjectId
-        ? {
-            ...proj,
-            name: projectData.name,
-            color: projectData.color,
-            description: projectData.description,
-            instructions: projectData.instructions,
-            updatedAt: new Date().toISOString()
-          }
-        : proj
-    );
-
-    setProjects(updatedProjects);
-
-    const updatedProject = updatedProjects.find((proj) => proj.id === targetProjectId);
-    setProject(updatedProject);
-
-    if (updatedProject) {
-      setTempDescription(updatedProject.description || '');
-      setTempInstructions(updatedProject.instructions || '');
+  const handleUpdateProject = async (targetProjectId, projectData) => {
+    try {
+      const savedProject = await saveProjectToDb(targetProjectId, projectData);
+      setProject(savedProject);
+      setTempDescription(savedProject.description || '');
+      setTempInstructions(savedProject.instructions || '');
+      setIsProjectModalOpen(false);
+    } catch (err) {
+      console.error('프로젝트 수정 실패:', err);
     }
-
-    setIsProjectModalOpen(false);
   };
 
   // ========================================

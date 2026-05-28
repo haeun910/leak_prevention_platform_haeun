@@ -4,6 +4,7 @@ import { Shield, ArrowLeft, RefreshCw } from 'lucide-react'
 import StatsCard from '../components/admin/StatsCard'
 import LogTable from '../components/admin/LogTable'
 import { getStats, getLogs } from '../api/client'
+import { labelEntityType } from '../utils/entityLabels'
 
 const PAGE_SIZE = 20
 
@@ -103,7 +104,7 @@ export default function AdminPage() {
                 const max = topEntityTypes[0][1]
                 return (
                   <div key={type} style={styles.barRow}>
-                    <span style={styles.barLabel}>{type}</span>
+                    <span style={styles.barLabel}>{labelEntityType(type)}</span>
                     <div style={styles.barTrack}>
                       <div style={{
                         ...styles.barFill,

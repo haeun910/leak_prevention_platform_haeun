@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, FileText, ShieldCheck } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import { getSecurityLogs } from '../services/dashboardApi';
+import { formatEntityTypes } from '../../../utils/entityLabels';
 import '../dashboard.css';
 
 const riskLabels = {
@@ -32,7 +33,7 @@ function SecurityLogsPage() {
 
   const summary = useMemo(() => ({
     total: logs.length,
-    masked: logs.filter((log) => log.was_masked).length,
+    masked: logs.filter((log) => log.was_masked || (log.masked_count || 0) > 0).length,
     high: logs.filter((log) => String(log.risk_level || '').toLowerCase() === 'high').length,
     entities: logs.reduce((sum, log) => sum + (log.masked_count || 0), 0),
   }), [logs]);
@@ -51,7 +52,7 @@ function SecurityLogsPage() {
   return (
     <DashboardLayout
       title="보안 현황 이력"
-      description="마스킹 감지, 위험도, 처리 단계별 이력을 확인합니다."
+      description="최근 마스킹 로그와 위험도, 처리 단계별 이력을 한곳에서 확인합니다."
     >
       {error && <div className="dashboard-state error">{error}</div>}
       <section className="security-summary-grid">
@@ -80,8 +81,7 @@ function SecurityLogsPage() {
       <section className="dashboard-card">
         <div className="dashboard-card-header dashboard-card-header-row">
           <div>
-            <h2>보안 이벤트 로그</h2>
-            <p>최근 100건 기준으로 마스킹 파이프라인 처리 이력을 표시합니다.</p>
+            <h2>최근 마스킹 로그</h2>
           </div>
           <div className="exception-filter">
             <button className={risk === '' ? 'active' : ''} onClick={() => setRisk('')}>전체</button>
@@ -99,10 +99,7 @@ function SecurityLogsPage() {
                   <th>시각</th>
                   <th>위험도</th>
                   <th>감지 유형</th>
-                  <th>단계</th>
                   <th>마스킹 수</th>
-                  <th>입력 길이</th>
-                  <th>세션</th>
                 </tr>
               </thead>
               <tbody>
@@ -110,14 +107,11 @@ function SecurityLogsPage() {
                   <tr key={log.id}>
                     <td>{formatDate(log.timestamp)}</td>
                     <td><span className={`risk-pill ${String(log.risk_level || 'none').toLowerCase()}`}>{riskLabels[String(log.risk_level || 'none').toLowerCase()] || log.risk_level}</span></td>
-                    <td>{log.entity_types || '-'}</td>
-                    <td>{log.detection_stage || '-'}</td>
+                    <td>{formatEntityTypes(log.entity_types)}</td>
                     <td>{log.masked_count || 0}</td>
-                    <td>{log.input_length || 0}</td>
-                    <td className="muted-cell">{log.session_id || '-'}</td>
                   </tr>
                 ))}
-                {logs.length === 0 && <tr><td colSpan="7">표시할 보안 이력이 없습니다.</td></tr>}
+                {logs.length === 0 && <tr><td colSpan="4">표시할 보안 이력이 없습니다.</td></tr>}
               </tbody>
             </table>
           </div>

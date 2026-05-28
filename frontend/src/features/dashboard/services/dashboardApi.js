@@ -1,6 +1,7 @@
 import api from '../../../api/client';
 
 export const getDashboardOverview = () => api.get('/admin/dashboard/summary');
+export const getAdminStats = () => api.get('/admin/stats');
 export const getUserStats = () => api.get('/admin/dashboard/users');
 export const getDepartmentStats = () => api.get('/admin/dashboard/departments');
 export const getAdminUsers = () => api.get('/admin/users');
@@ -15,3 +16,5 @@ export const getExceptionKeywords = () => api.get('/admin/exception-keywords');
 export const createExceptionKeyword = (data) => api.post('/admin/exception-keywords', data);
 export const updateExceptionKeyword = (id, data) => api.patch(`/admin/exception-keywords/${id}`, data);
 export const deleteExceptionKeyword = (id) => api.delete(`/admin/exception-keywords/${id}`);
+export const getDepartmentChangeRequests = () => api.get('/admin/department-change-requests');
+export const updateDepartmentChangeRequest = (id, data) => api.patch(`/admin/department-change-requests/${id}`, data);

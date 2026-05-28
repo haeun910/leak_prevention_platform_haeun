@@ -8,7 +8,7 @@ import DashboardHeader from './DashboardHeader';
 // 3) 대시보드 홈, 사용자 통계, 부서 통계 등 여러 페이지에서 공통으로 재사용 가능
 function DashboardLayout({ title, description, children }) {
   // 로그인한 사용자 정보
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || localStorage.getItem('userInfo') || '{}');
 
   return (
     <div className="dashboard-layout">
@@ -19,7 +19,6 @@ function DashboardLayout({ title, description, children }) {
       <main className="dashboard-main">
         <DashboardHeader
           title={title}
-          description={description}
           userInfo={userInfo}
         />
 
