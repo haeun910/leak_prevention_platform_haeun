@@ -5,6 +5,7 @@ import {
   BarChart3,
   Building2,
   ClipboardList,
+  FileText,
   Home,
   PanelLeftClose,
   PanelLeftOpen,
@@ -23,6 +24,7 @@ const MENU_ITEMS = [
   { label: '부서 변경 요청', path: '/dashboard/department-requests', isReady: true, icon: Building2 },
   { label: '예외 관리', path: '/dashboard/exceptions', match: ['/dashboard/exceptions', '/dashboard/keywords'], isReady: true, icon: ClipboardList },
   { label: '보안 현황 이력', path: '/dashboard/logs', isReady: true, icon: BarChart3 },
+  { label: '보안 보고서', path: '/dashboard/reports', isReady: true, icon: FileText },
 ];
 
 function DashboardSidebar({ userInfo }) {

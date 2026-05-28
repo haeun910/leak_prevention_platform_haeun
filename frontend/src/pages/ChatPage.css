@@ -168,3 +168,10 @@
   width: 100%;
   max-width: 760px;
 }
+
+/* ── 템플릿 패널이 열릴 때 채팅 영역 max-width 축소 ──
+   패널(272px)이 우측에 붙으면 채팅 영역이 좁아지므로
+   content-width 변수를 줄여서 글이 너무 넓어지지 않게 함 */
+.chat-page:has(.template-panel) .chat-area {
+  --chat-content-width: 760px;
+}

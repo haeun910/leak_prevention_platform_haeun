@@ -45,6 +45,12 @@ export const getPreferences = () => api.get('/mask/preferences')
 export const savePreferences = (data) => api.post('/mask/preferences', data)
 export const submitDepartmentChangeRequest = (data) => api.post('/mask/department-change-requests', data)
 
+// Prompt Templates
+export const getTemplates = () => api.get('/mask/templates')
+export const createTemplate = (data) => api.post('/mask/templates', data)
+export const updateTemplate = (id, data) => api.patch(`/mask/templates/${id}`, data)
+export const deleteTemplate = (id) => api.delete(`/mask/templates/${id}`)
+
 // Admin
 export const getStats = () => api.get('/admin/stats')
 export const getLogs = (params) => api.get('/admin/logs', { params })
