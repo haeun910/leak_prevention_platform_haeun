@@ -8,29 +8,33 @@ from app.llm.base import BaseLLM
 
 class GeminiLLM(BaseLLM):
     def __init__(self):
-        self.model = settings.GEMINI_MODEL  # 예: "gemini-2.0-flash"
+        self.model = settings.GEMINI_MODEL
 
     async def chat(self, messages: List[Dict[str, str]]) -> str:
         if not settings.GEMINI_API_KEY:
             raise RuntimeError("GEMINI_API_KEY가 설정되지 않았습니다.")
 
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel(self.model)
 
-        gemini_messages = [
-            {
-                "role": "model" if m["role"] == "assistant" else m["role"],
-                "parts": [m["content"]]
-            }
-            for m in messages if m["role"] != "system"
-        ]
-
-        # system 메시지 별도 처리
+        # system 메시지 분리
         system_prompt = next(
             (m["content"] for m in messages if m["role"] == "system"), None
         )
-        if system_prompt:
-            model = genai.GenerativeModel(self.model, system_instruction=system_prompt)
+        filtered_messages = [m for m in messages if m["role"] != "system"]
+
+        # Gemini 형식으로 변환
+        gemini_messages = [
+            {
+                "role": "model" if m["role"] == "assistant" else "user",
+                "parts": [m["content"]]
+            }
+            for m in filtered_messages
+        ]
+
+        model = genai.GenerativeModel(
+            self.model,
+            system_instruction=system_prompt
+        )
 
         chat = model.start_chat(history=gemini_messages[:-1])
         response = await chat.send_message_async(gemini_messages[-1]["parts"][0])
