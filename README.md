@@ -15,14 +15,14 @@ backend/models/
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate # MAC : source venv/bin/activate
+venv\Scripts\activate     # MAC : source venv/bin/activate
 pip install -r requirements.txt
 
 cp ../.env.example .env        # .env 파일 생성 후 API 키 입력
 
 uvicorn app.main:app --port 8001
-# → http://localhost:8000
-# → API 문서: http://localhost:8000/docs
+# → http://127.0.0.1:8001
+# → API 문서: http://127.0.0.1:8001/docs
 ```
 
 ### 3. 프론트엔드 실행
@@ -37,7 +37,7 @@ npm run dev
 
 | 구분 | 항목 |
 |---|---|
-| 규칙 기반 | 전화번호, 이메일, 주민번호, 외국인등록번호, 여권번호, 차량번호, 계좌번호, 카드번호, IP |
+| 규칙 기반 | 전화번호, 이메일, 주민번호, 외국인등록번호, 여권번호, 차량번호, 계좌번호, 카드번호, 현금영수증, 사업자등록번호, 법인등록번호 |
 | 모델 기반 | 이름, 주소, 비밀번호, API 키, 문서명/파일명 |
 
 ## 기술 스택
