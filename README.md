@@ -47,30 +47,19 @@ npm run dev
 - **LLM**: OpenAI GPT-4o (Claude, Gemini 추후 지원 예정)
 
 
-## 날짜별 수정 이력
-- **04.27** : [전화번호], [계좌번호] 오탐 수정 <br>
-    → backend\app\pipeline\regex_layer.py<br>
-    → backend\app\api\mask.py<br>
-    → backend\app\schemas\models.py<br>
-    → backend\app\main.py<br>
 
-- **04.30** : 새로고침 시 대화 내용 사라지는 문제 수정 <br>
-    → 마스킹 한 원문이 localStorage에 저장되는 문제 수정 <br>
-    → 채팅 전송 후 입력창에 바로 포커스 가도록 수정 <br>
+**프롬프트 템플릿 라이브러리 추가**
 
-- **05.03** : 직책 마스킹 예외 처리 <br>
-    → 관리자 대시보드 로그인 화면 생성 <br>
-    → 마스킹 로그 시간 수정 중 <br>
+채팅 페이지 우측 패널에 템플릿 12종 기본 제공
 
-- **05.04** : 마스킹 로그 시간 수정 <br>
-→ 관리자 대시보드 로그인 정리 <br>
-→ 마스킹 비율 재조정 (추후 다시 체크 할 예정) <br>
+개인 템플릿 추가·수정·삭제 (DB 저장)
 
-- **05.11** : 채팅 내용 DB 저장 전환 (localStorage → DB) <br>
-→ ChatConversation, ChatMessage 테이블 추가 <br>
-→ 채팅 저장/조회/삭제 API 추가 (`/mask/conversations`) <br>
-→ 사용자별 본인 채팅만 조회되도록 수정 <br>
-→ `/api/auth/me` 엔드포인트 추가 <br>
-→ 서버 재시작 시 토큰 자동 무효화 (보안 강화) <br>
-→ chatStore.js persist 제거, DB 연동으로 교체 <br>
-→ 새로고침 시 채팅창 유지, 서버 재시작 시 로그인 화면 표시 <br>
+시스템 템플릿은 복사본으로만 편집 가능
+
+백엔드 CRUD API 추가 (/api/mask/templates)
+
+**보안 보고서 페이지 추가**
+
+관리자 대시보드에 기간별 보안 현황 보고서 페이지 추가
+
+PDF 다운로드 기능 포함
