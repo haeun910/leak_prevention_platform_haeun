@@ -24,6 +24,7 @@ from app.core.database import (
     get_db,
 )
 from app.core.security import get_current_user  # JWT에서 유저 꺼내는 함수
+
 from datetime import datetime, timezone, timedelta
 KST = timezone(timedelta(hours=9))
 
@@ -126,11 +127,25 @@ async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), cur
     try:
         llm = LLM_PROVIDERS[provider]()
         preference = db.query(UserPreference).filter(UserPreference.user_id == current_user.id).first()
+
+        # 1. system 프롬프트
         messages = []
         if preference and preference.personal_instructions:
             messages.append({"role": "system", "content": preference.personal_instructions})
+
+        # 2. 이전 대화 히스토리 불러오기 (conversation_id = session_id)
+        history = db.query(ChatMessage)\
+            .filter(ChatMessage.conversation_id == session_id)\
+            .order_by(ChatMessage.timestamp.asc())\
+            .all()
+        for h in history:
+            messages.append({"role": h.role, "content": h.content})
+
+        # 3. 현재 메시지 추가
         messages.append({"role": "user", "content": masked_text})
         answer = await llm.chat(messages)
+
+
     except Exception as e:
         print("LLM ERROR:", repr(e))
         raise HTTPException(status_code=502, detail=f"LLM API 오: {str(e)}")

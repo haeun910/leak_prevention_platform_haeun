@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Check, Copy, Pencil } from 'lucide-react';
 import { useModal } from '../../../../components/AppModal';
+import ReactMarkdown from 'react-markdown'
 import './MessageBubble.css';
+
 
 // =====================================================
 // 시간 포맷 유틸 함수 (순수 함수 → 컴포넌트 외부에 정의)
@@ -131,7 +133,9 @@ function MessageBubble({ message, onEditMessage }) {
             // =========================
             <>
               {/* 메시지 본문 */}
-              <div className="message-text">{message.text}</div>
+              <div className="message-text">
+                {isUser ? message.text : <ReactMarkdown>{message.text}</ReactMarkdown>}
+              </div>
 
               {/* 사용자 메시지에 마스킹 감지 정보가 있을 때만 표시 */}
               {isUser && message.detectedItems && message.detectedItems.length > 0 && (
