@@ -13,6 +13,7 @@ import DepartmentRequestsPage from './features/dashboard/pages/DepartmentRequest
 import ExceptionRequestsPage from './features/dashboard/pages/ExceptionRequestsPage';
 import ExceptionKeywordsPage from './features/dashboard/pages/ExceptionKeywordsPage';
 import SecurityLogsPage from './features/dashboard/pages/SecurityLogsPage';
+import ReportPage from './features/dashboard/pages/ReportPage';
 import { ModalProvider } from './components/AppModal';
 
 // =====================================================
@@ -158,6 +159,14 @@ function App() {
           element={
             <PrivateRoute requiredRole="admin">
               <SecurityLogsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/reports"
+          element={
+            <PrivateRoute requiredRole="admin">
+              <ReportPage />
             </PrivateRoute>
           }
         />

@@ -4,9 +4,10 @@ import Sidebar from '../features/chat/components/sidebar/Sidebar';
 import MessageBubble from '../features/chat/components/window/MessageBubble';
 import InputBox from '../features/chat/components/input/InputBox';
 import ProjectModal from '../features/chat/components/sidebar/ProjectModal';
+import TemplatePanel from '../features/chat/components/template/TemplatePanel';
 import { useChatProject } from '../features/chat/hooks/useChatProject';
 import { generateChatTitle } from '../features/chat/utils/generateChatTitle';
-import api, { previewMask, sendChat } from '../api/client';
+import api, { previewMask, sendChat, getTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api/client';
 import { labelEntityType } from '../utils/entityLabels';
 import './ChatPage.css';
 
@@ -55,6 +56,22 @@ function ChatPage() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [llmProvider, setLlmProvider] = useState('openai');
+
+  // ===== 템플릿 패널 상태 =====
+  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
+  const [userTemplates, setUserTemplates] = useState([]);
+  // 템플릿 삽입 시 InputBox textarea에 포커스 이동시키는 트리거
+  const [inputFocusTrigger, setInputFocusTrigger] = useState(0);
+
+  // 로그인된 사용자의 개인 템플릿을 서버에서 불러옴
+  // 실패해도 시스템 템플릿은 계속 작동하므로 조용히 처리
+  useEffect(() => {
+    if (!userEmail || userEmail === 'guest') return;
+    getTemplates()
+      .then((res) => setUserTemplates(res.data))
+      .catch(() => {});
+  }, [userEmail]);
+
 
   // 메시지 목록 맨 아래를 가리키는 ref (자동 스크롤용)
   const messagesEndRef = useRef(null);
@@ -460,6 +477,34 @@ function ChatPage() {
     setIsProjectModalOpen(true);
   };
 
+  // ===== 템플릿 CRUD 핸들러 =====
+
+  // 새 템플릿 생성: 서버에 저장 후 로컬 상태에도 추가
+  // 실패 시 예외를 그대로 throw → TemplateFormModal에서 에러 메시지 표시
+  const handleCreateTemplate = async (data) => {
+    const { data: created } = await createTemplate(data);
+    setUserTemplates((prev) => [created, ...prev]);
+  };
+
+  // 기존 템플릿 수정: 서버 업데이트 후 로컬 상태 반영
+  const handleUpdateTemplate = async (id, data) => {
+    const { data: updated } = await updateTemplate(id, data);
+    setUserTemplates((prev) => prev.map((t) => (t.id === id ? updated : t)));
+  };
+
+  // 템플릿 삭제: 서버에서 제거 후 로컬 상태에서도 제거
+  const handleDeleteTemplate = async (id) => {
+    await deleteTemplate(id);
+    setUserTemplates((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // 템플릿 클릭 시 입력창에 내용 삽입
+  const handleInsertTemplate = (content) => {
+    setInputText(content);
+    // 텍스트 삽입 직후 textarea에 자동 포커스 (InputBox의 focusTrigger useEffect 트리거)
+    setInputFocusTrigger((v) => v + 1);
+  };
+
   // ===== 프로젝트 모달 열기 (새 생성) =====
   const handleNewProject = () => {
     setEditingProject(null);
@@ -537,6 +582,9 @@ function ChatPage() {
                   isLoading={isLoading}
                   llmProvider={llmProvider}
                   onChangeLlmProvider={setLlmProvider}
+                  onToggleTemplates={() => setTemplatePanelOpen((v) => !v)}
+                  templatesOpen={templatePanelOpen}
+                  focusTrigger={inputFocusTrigger}
                 />
               </div>
             </>
@@ -557,12 +605,28 @@ function ChatPage() {
                   isLoading={isLoading}
                   llmProvider={llmProvider}
                   onChangeLlmProvider={setLlmProvider}
+                  onToggleTemplates={() => setTemplatePanelOpen((v) => !v)}
+                  templatesOpen={templatePanelOpen}
+                  focusTrigger={inputFocusTrigger}
                 />
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* 템플릿 패널 - templatePanelOpen 일 때만 렌더링 */}
+      {templatePanelOpen && (
+        <TemplatePanel
+          onInsert={handleInsertTemplate}
+          onClose={() => setTemplatePanelOpen(false)}
+          userTemplates={userTemplates}
+          onCreateTemplate={handleCreateTemplate}
+          onUpdateTemplate={handleUpdateTemplate}
+          onDeleteTemplate={handleDeleteTemplate}
+        />
+      )}
+
 
       {/* 프로젝트 생성 / 수정 모달 */}
       {isProjectModalOpen && (

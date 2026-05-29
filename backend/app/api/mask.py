@@ -20,6 +20,7 @@ from app.core.database import (
     ChatMessage,
     ChatProject,
     UserPreference,
+    PromptTemplate,
     get_db,
 )
 from app.core.security import get_current_user  # JWT에서 유저 꺼내는 함수
@@ -381,6 +382,95 @@ def save_preferences(body: dict, db: Session = Depends(get_db), current_user=Dep
     preference.updated_at = datetime.now(KST)
     db.commit()
     return {"ok": True}
+
+
+# ── 프롬프트 템플릿 CRUD ──────────────────────────────────────────
+
+@router.get("/templates")
+def get_templates(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    """로그인한 사용자의 개인 템플릿 목록 반환"""
+    templates = (
+        db.query(PromptTemplate)
+        .filter(PromptTemplate.user_id == current_user.id)
+        .order_by(PromptTemplate.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": t.id,
+            "title": t.title,
+            "content": t.content,
+            "category": t.category,
+            "created_at": t.created_at.isoformat(),
+        }
+        for t in templates
+    ]
+
+
+@router.post("/templates")
+def create_template(body: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    """새 개인 템플릿 생성"""
+    title = (body.get("title") or "").strip()
+    content = (body.get("content") or "").strip()
+    if not title or not content:
+        raise HTTPException(status_code=400, detail="제목과 내용을 입력해 주세요.")
+    template = PromptTemplate(
+        user_id=current_user.id,
+        title=title,
+        content=content,
+        category=(body.get("category") or "기타").strip(),
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return {
+        "id": template.id,
+        "title": template.title,
+        "content": template.content,
+        "category": template.category,
+        "created_at": template.created_at.isoformat(),
+    }
+
+
+@router.patch("/templates/{template_id}")
+def update_template(template_id: int, body: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    """개인 템플릿 수정 (소유자만 가능)"""
+    template = db.query(PromptTemplate).filter(
+        PromptTemplate.id == template_id,
+        PromptTemplate.user_id == current_user.id,
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
+    if "title" in body:
+        template.title = (body["title"] or "").strip() or template.title
+    if "content" in body:
+        template.content = (body["content"] or "").strip() or template.content
+    if "category" in body:
+        template.category = (body["category"] or "기타").strip()
+    template.updated_at = datetime.now(KST)
+    db.commit()
+    db.refresh(template)
+    return {
+        "id": template.id,
+        "title": template.title,
+        "content": template.content,
+        "category": template.category,
+    }
+
+
+@router.delete("/templates/{template_id}")
+def delete_template(template_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    """개인 템플릿 삭제 (소유자만 가능)"""
+    template = db.query(PromptTemplate).filter(
+        PromptTemplate.id == template_id,
+        PromptTemplate.user_id == current_user.id,
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
+    db.delete(template)
+    db.commit()
+    return {"ok": True}
+
 
 # < 부서 변경 요청 >
 @router.post("/department-change-requests")

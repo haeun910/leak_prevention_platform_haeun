@@ -127,6 +127,18 @@ class UserPreference(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(KST))
 
 
+class PromptTemplate(Base):
+    __tablename__ = "prompt_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)       # 소유 사용자 ID
+    title = Column(String)                       # 템플릿 제목
+    content = Column(String)                     # 실제 프롬프트 내용
+    category = Column(String, default="기타")   # 카테고리 (예: HR, 개발, 문서)
+    created_at = Column(DateTime, default=lambda: datetime.now(KST))
+    updated_at = Column(DateTime, default=lambda: datetime.now(KST))
+
+
 class ContactInquiry(Base):
     __tablename__ = "contact_inquiries"
 

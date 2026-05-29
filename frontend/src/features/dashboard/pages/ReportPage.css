@@ -1,0 +1,379 @@
+/* ── 컨트롤 영역 ── */
+.report-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+
+.report-period-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-period-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.report-period-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.report-period-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.report-period-tab:hover {
+  border-color: #c7d2fe;
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
+.report-period-tab.active {
+  background: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
+}
+
+.report-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #6366f1;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.report-download-btn:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.report-download-btn:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+.report-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 보고서 본문 (PDF 캡처 대상) ── */
+.report-preview {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 36px 40px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1f2937;
+}
+
+/* ── 헤더 ── */
+.rp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #6366f1;
+  margin-bottom: 28px;
+}
+
+.rp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rp-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #eef2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+
+.rp-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.rp-subtitle {
+  font-size: 14px;
+  color: #6366f1;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.rp-meta {
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.8;
+}
+
+/* ── 섹션 공통 ── */
+.rp-section {
+  margin-bottom: 24px;
+}
+
+.rp-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rp-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.rp-empty {
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ── 전체 현황 요약 카드 ── */
+.rp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.rp-stat-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.rp-stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.rp-stat-value.rp-indigo { color: #6366f1; }
+.rp-stat-value.rp-red    { color: #ef4444; }
+.rp-stat-value.rp-green  { color: #10b981; }
+
+.rp-stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ── 2열 레이아웃 ── */
+.rp-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ── 바 차트 ── */
+.rp-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rp-bar-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+  gap: 10px;
+}
+
+.rp-bar-name {
+  font-size: 12px;
+  color: #374151;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rp-bar-track {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rp-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.rp-bar-stat {
+  font-size: 12px;
+  color: #374151;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rp-ratio {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* ── 예외 처리 현황 ── */
+.rp-exception-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.rp-exception-item {
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.rp-exception-item.rp-approved {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+.rp-exception-item.rp-rejected {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+.rp-exception-item.rp-pending {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.rp-exception-count {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.rp-approved .rp-exception-count { color: #10b981; }
+.rp-rejected .rp-exception-count { color: #ef4444; }
+.rp-pending  .rp-exception-count { color: #f59e0b; }
+
+.rp-exception-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rp-keyword-count {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.rp-keyword-count strong {
+  color: #374151;
+}
+
+/* ── 전월 대비 ── */
+.rp-compare-row {
+  padding: 10px 0;
+}
+
+.rp-compare-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.rp-compare-values {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.rp-compare-current {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.rp-change-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rp-change-badge.up {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.rp-change-badge.down {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.rp-compare-prev {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ── 푸터 ── */
+.rp-footer {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 16px;
+  font-size: 11px;
+  color: #9ca3af;
+  text-align: center;
+}

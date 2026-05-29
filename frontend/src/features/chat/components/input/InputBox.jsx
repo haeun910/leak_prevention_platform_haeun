@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Paperclip, Send, ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react';
+import { BookOpen, Paperclip, Send, ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react';
 import { previewMask } from '../../../../api/client';
 import { labelEntityType } from '../../../../utils/entityLabels';
 import './InputBox.css';
@@ -26,6 +26,9 @@ function InputBox({
   isLoading,
   llmProvider = 'openai',
   onChangeLlmProvider,
+  onToggleTemplates,  // 템플릿 패널 열기/닫기 콜백
+  templatesOpen,      // 패널이 현재 열려있는지 여부 (버튼 활성 스타일용)
+  focusTrigger,       // 이 값이 바뀔 때마다 textarea에 포커스 (템플릿 삽입 후 커서 이동용)
 }) {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -74,6 +77,14 @@ function InputBox({
       textareaRef.current?.focus();
     }
   }, [isLoading]);
+
+  // 템플릿 삽입 후 textarea에 자동 포커스
+  // focusTrigger 값이 증가할 때마다 실행 (0일 때는 초기 렌더이므로 건너뜀)
+  useEffect(() => {
+    if (focusTrigger > 0) {
+      textareaRef.current?.focus();
+    }
+  }, [focusTrigger]);
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -136,6 +147,20 @@ function InputBox({
             <span className="toolbar-title">응답 모델</span>
             <span className="toolbar-subtitle">전송 전 사용하고 싶은 모델을 선택해 주세요.</span>
           </div>
+
+          {/* 템플릿 라이브러리 토글 버튼 — onToggleTemplates prop이 있을 때만 렌더링 */}
+          {onToggleTemplates && (
+            <button
+              type="button"
+              className={`templates-toggle-btn ${templatesOpen ? 'active' : ''}`}
+              onClick={onToggleTemplates}
+              title="프롬프트 템플릿 라이브러리"
+            >
+              <BookOpen size={14} />
+              <span>템플릿</span>
+            </button>
+          )}
+
           <div className="provider-segment" role="group" aria-label="LLM provider 선택">
             {LLM_OPTIONS.map((option) => (
               <button
