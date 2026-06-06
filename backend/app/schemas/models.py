@@ -32,6 +32,9 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     provider: Optional[str] = "openai"
     conversation_history: List[dict] = Field(default_factory=list)
+    entities: List[dict] = Field(default_factory=list)  
+    risk_level: Optional[str] = "none"                  
+    masked_count: Optional[int] = 0  
 
 
 class ChatResponse(BaseModel):

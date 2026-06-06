@@ -55,14 +55,37 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer
 
 # 대시보드 기본 통계 반환
 @router.get("/stats", response_model=DashboardStats)
-def get_stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
-    total_requests = db.query(MaskingLog).count()
-    total_masked = db.query(func.sum(MaskingLog.masked_count)).scalar() or 0
-    masked_requests = db.query(MaskingLog).filter(MaskingLog.masked_count > 0).count()
-    high_risk_count = db.query(MaskingLog).filter(func.lower(MaskingLog.risk_level) == "high").count()
+def get_stats(period: str = "this_month", db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    now_kst = datetime.now(KST)
+    
+    # period에 따라 날짜 범위 계산
+    if period == "this_month":
+        start = now_kst.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end = now_kst
+    elif period == "last_month":
+        first_this_month = now_kst.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end = first_this_month
+        start = (first_this_month - timedelta(days=1)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif period == "last_3_months":
+        start = (now_kst - timedelta(days=90)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now_kst
+    else:
+        start = None
+        end = None
+
+    # 기간 필터 적용
+    query = db.query(MaskingLog)
+    if start and end:
+        query = query.filter(MaskingLog.timestamp >= start, MaskingLog.timestamp <= end)
+
+    logs = query.all()
+    total_requests = len(logs)
+    total_masked = sum(log.masked_count or 0 for log in logs)
+    masked_requests = sum(1 for log in logs if (log.masked_count or 0) > 0)
+    high_risk_count = sum(1 for log in logs if (log.risk_level or '').lower() == 'high')
 
     entity_counter = Counter()
-    for log in db.query(MaskingLog).all():
+    for log in logs:
         if log.entity_types:
             for entity_type in log.entity_types.split(","):
                 entity_type = entity_type.strip()

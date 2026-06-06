@@ -105,15 +105,15 @@ def run_masking_pipeline(text: str):
 async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     session_id = req.session_id or str(uuid.uuid4())
     masked_text = req.text
-    entities = []
-    overall_risk = "none"
+    entities = req.entities or []
+    overall_risk = req.risk_level or "none"
     was_masked = len(entities) > 0
 
     if was_masked:
         db.add(MaskingLog(
             session_id=session_id,
-            entity_types=",".join(set(e.entity_type for e in entities)),
-            detection_stage=",".join(set(e.stage for e in entities)),
+            entity_types=",".join(set(e.get('entity_type', '') for e in entities if e.get('entity_type'))),
+            detection_stage=",".join(set(e.get('stage', '') for e in entities if e.get('stage'))),
             risk_level=overall_risk,
             masked_count=len(entities),
             was_masked=True,

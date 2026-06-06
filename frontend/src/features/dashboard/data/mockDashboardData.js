@@ -24,7 +24,7 @@ export const dashboardSummary = [
   },
   {
     id: 'totalMasked',
-    title: '전체 마스킹 건수',
+    title: '이번 달',
     value: '1,280',
     description: '누적 민감정보 마스킹 수',
     accentText: '+12%',

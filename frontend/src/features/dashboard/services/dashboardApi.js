@@ -1,7 +1,7 @@
 import api from '../../../api/client';
 
 export const getDashboardOverview = () => api.get('/admin/dashboard/summary');
-export const getAdminStats = () => api.get('/admin/stats');
+export const getAdminStats = (period = 'this_month') => api.get('/admin/stats', { params: { period } });
 export const getUserStats = () => api.get('/admin/dashboard/users');
 export const getDepartmentStats = () => api.get('/admin/dashboard/departments');
 export const getAdminUsers = () => api.get('/admin/users');

@@ -55,18 +55,18 @@ function useDashboardData() {
         icon: CalendarCheck,
       },
       {
-        id: 'totalMasked',
-        title: '전체 마스킹 건수',
-        value: formatNumber(data.total_masked),
-        accentText: '누적',
-        icon: ShieldCheck,
-      },
-      {
         id: 'monthlyMasked',
         title: '이번 달 마스킹 건수',
         value: formatNumber(data.month_masked),
         accentText: '월간',
         icon: BarChart3,
+      },
+      {
+        id: 'highRisk',
+        title: '위험도 높음 건수',
+        value: formatNumber(data.high_risk_count),
+        accentText: '고위험',
+        icon: ShieldCheck,
       },
       {
         id: 'pendingRequests',

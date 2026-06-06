@@ -43,7 +43,7 @@ function ReportPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [period]);
 
   const loadData = async () => {
     setLoading(true);
@@ -51,7 +51,7 @@ function ReportPage() {
     try {
       const [overviewRes, statsRes, deptRes, exceptionsRes, keywordsRes] = await Promise.all([
         getDashboardOverview(),
-        getAdminStats(),
+        getAdminStats(period),
         getDepartmentStats(),
         getExceptionRequests(),
         getExceptionKeywords(),

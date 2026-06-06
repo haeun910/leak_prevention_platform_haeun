@@ -245,6 +245,9 @@ function ChatPage() {
         text: previewUserMessage?.text || originalText,
         session_id: targetChatId,
         provider: llmProvider,
+        entities: previewUserMessage?.entities || [],           
+        risk_level: previewUserMessage?.riskLevel || 'none',   
+        masked_count: previewUserMessage?.entities?.length || 0,
       });
 
       const detectedItems = [...new Set((data.detected_entities || []).map((item) => labelEntityType(item.entity_type)))];

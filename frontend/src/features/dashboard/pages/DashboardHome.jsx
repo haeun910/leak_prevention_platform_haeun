@@ -42,18 +42,19 @@ function getEntityBreakdown(logs) {
 
 function isToday(timestamp) {
   if (!timestamp) return false;
-  const d = new Date(timestamp);
-  const now = new Date();
-  return d.getFullYear() === now.getFullYear()
-    && d.getMonth() === now.getMonth()
-    && d.getDate() === now.getDate();
+  const d = new Date(new Date(timestamp).getTime() + 9 * 60 * 60 * 1000);
+  const now = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+  return d.getUTCFullYear() === now.getUTCFullYear()
+    && d.getUTCMonth() === now.getUTCMonth()
+    && d.getUTCDate() === now.getUTCDate();
 }
 
 function isThisMonth(timestamp) {
   if (!timestamp) return false;
-  const d = new Date(timestamp);
-  const now = new Date();
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  const d = new Date(new Date(timestamp).getTime() + 9 * 60 * 60 * 1000);
+  const now = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+  return d.getUTCFullYear() === now.getUTCFullYear()
+    && d.getUTCMonth() === now.getUTCMonth();
 }
 
 function formatNumber(value) {
@@ -268,7 +269,7 @@ function DetailPanel({ insight, recentLogs, totalMasked, onClose }) {
             <h3>{insight.title}</h3>
             <div className="insight-count">
               <strong>{formatNumber(insight.count)}</strong>
-              <span>건</span>
+              <span>건 마스킹</span>
               {share > 0 && <em>전체의 {share}%</em>}
             </div>
           </div>
@@ -282,7 +283,12 @@ function DetailPanel({ insight, recentLogs, totalMasked, onClose }) {
         <>
           {insight.breakdown.length > 0 && (
             <div className="insight-section">
-              <p className="insight-section-label">항목별 현황</p>
+              <p className="insight-section-label">
+                카테고리별 탐지 횟수
+                <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '6px', fontWeight: 'normal' }}>
+                  (마스킹 건수와 카테고리별 탐지 횟수는 다름)
+                </span>
+              </p>
               <ul className="insight-breakdown-list">
                 {insight.breakdown.map((item) => (
                   <li key={item.label} className="insight-breakdown-row">
@@ -316,27 +322,6 @@ function DetailPanel({ insight, recentLogs, totalMasked, onClose }) {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {relatedLogs.length > 0 && (
-            <div className="insight-section">
-              <p className="insight-section-label">연관 로그</p>
-              <div className="insight-log-list">
-                {relatedLogs.map((log) => {
-                  const riskKey = String(log.risk_level || 'none').toLowerCase();
-                  return (
-                    <div key={log.id} className="insight-log-row">
-                      <time className="insight-log-time">{formatLogDate(log.timestamp)}</time>
-                      <span className="insight-log-type">{formatEntityTypes(log.entity_types)}</span>
-                      <div className="insight-log-right">
-                        <span>{formatNumber(log.masked_count)}건</span>
-                        <span className={RISK_LEVEL_CLS[riskKey] || 'risk-pill none'}>{RISK_LEVEL_LABELS[riskKey] || riskKey}</span>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}
@@ -404,8 +389,8 @@ function DashboardHome() {
       const card = summary.find((item) => item.id === selectedInsight.key) || summary[0];
       const countMap = {
         todayMasked: rawSummary.today_masked,
-        totalMasked: rawSummary.total_masked,
         monthlyMasked: rawSummary.month_masked,
+        highRisk: rawSummary.high_risk_count,       // ← 추가
         pendingRequests: rawSummary.pending_exception_requests,
       };
 
@@ -427,6 +412,12 @@ function DashboardHome() {
         if (entityBreakdown.length === 0) {
           entityBreakdown = coloredCategories.slice(0, 6).map((item) => ({ label: item.category, value: item.count }));
         }
+      } else if (card?.id === 'highRisk') {
+        filteredLogs = recentLogs.filter((log) => (log.risk_level || '').toLowerCase() === 'high');
+        console.log('고위험 필터 결과:', filteredLogs.length, filteredLogs.map(l => l.risk_level)); // 추가
+        matchLog = (log) => (log.risk_level || '').toLowerCase() === 'high';
+        kicker = '고위험 탐지 카테고리';
+        entityBreakdown = getEntityBreakdown(filteredLogs);
       } else if (card?.id === 'pendingRequests') {
         kicker = '예외 요청 현황';
         entityBreakdown = [
