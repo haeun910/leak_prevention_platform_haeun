@@ -242,7 +242,7 @@ function ChatPage() {
 
     try {
       const { data } = await sendChat({
-        text: originalText,
+        text: previewUserMessage?.text || originalText,
         session_id: targetChatId,
         provider: llmProvider,
       });

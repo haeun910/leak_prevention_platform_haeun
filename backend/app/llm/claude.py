@@ -22,12 +22,16 @@ class ClaudeLLM(BaseLLM):
         )
         filtered_messages = [m for m in messages if m["role"] != "system"]
 
-        response = await client.messages.create(
-            model=self.model,
-            max_tokens=1024,
-            system=system_prompt,  # 별도 파라미터로
-            messages=filtered_messages,
-        )
+        # system_prompt가 None이면 파라미터에서 제외
+        kwargs = {
+            "model": self.model,
+            "max_tokens": 1024,
+            "messages": filtered_messages,
+        }
+        if system_prompt:
+            kwargs["system"] = system_prompt
+
+        response = await client.messages.create(**kwargs)
         return response.content[0].text or ""
 
     def get_provider_name(self) -> str:

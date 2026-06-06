@@ -104,7 +104,9 @@ def run_masking_pipeline(text: str):
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     session_id = req.session_id or str(uuid.uuid4())
-    masked_text, entities, overall_risk = run_masking_pipeline_with_exceptions(req.text, db)
+    masked_text = req.text
+    entities = []
+    overall_risk = "none"
     was_masked = len(entities) > 0
 
     if was_masked:
@@ -149,8 +151,6 @@ async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), cur
     except Exception as e:
         print("LLM ERROR:", repr(e))
         raise HTTPException(status_code=502, detail=f"LLM API 오: {str(e)}")
-    '''# LLM 호출 제거 (임시)
-    answer = "[LLM 비활성화 상태] 마스킹 결과만 반환합니다."'''
 
     return ChatResponse(
         question=masked_text,

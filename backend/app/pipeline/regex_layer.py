@@ -27,8 +27,6 @@ RISK_MAP = {
     "차량번호": "medium",
     "사업자등록번호": "medium", 
     "법인등록번호": "medium",
-    # "IPv4": "low", 
-    # "IPv6": "low", 
     "현금영수증": "low",
 }
 
@@ -197,11 +195,19 @@ def detect_card(text: str) -> list:
 # ──────────────────────────────────────────
 # 4. 차량번호
 
-_CAR = re.compile(r'(?<![가-힣\d])\s*(\d{2,3}\s*[가-힣]\s*\d{4})(?!\d)')
+_CAR = re.compile(
+    r'\d{2,3}\s*'           # 앞 숫자 (12, 123 등)
+    r'[가나다라마바사아자차카타파하'
+    r'거너더러머버서어저처커터퍼허'
+    r'고노도로모보소오조초코토포호'
+    r'구누두루무부수우주추쿠투푸후'
+    r'배]\s*'               # 한글 지역명
+    r'\d{4}'                # 뒤 4자리
+)
 _CAR_REGION = re.compile(
-    r'(?<![가-힣])'
+    r'(?<![가-마|거-저|고-조|구-주|아|바|사|자|하|허|호|배])'
     r'(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)'
-    r'\s*(\d{2,3}[가-힣]\d{4})(?!\d)'
+    r'\s*(\d{2,3}[가-마|거-저|고-조|구-주|아|바|사|자|하|허|호|배]\d{4})(?!\d)'
 )
 _VEHICLE_KEYWORDS = (
     r'차량번호|차번호|차량|번호판|자동차|승용차|트럭|버스|오토바이|이륜차|'
@@ -460,22 +466,22 @@ def detect_rrn_frn(text: str) -> list:
     matched_spans = []
 
     for m in _RRN_KEYWORD.finditer(text):
-        span = m.span()
-        if _no_overlap(span, matched_spans):
-            results.append({"type": "주민등록번호", "value": m.group(), "span": span})
-            matched_spans.append(span)
+        num_span = (m.start(1), m.end(2))  
+        if _no_overlap(num_span, matched_spans):
+            results.append({"type": "주민등록번호", "value": m.group(1) + m.group(2), "span": num_span})
+            matched_spans.append(num_span)
 
     for m in _FRN_KEYWORD.finditer(text):
-        span = m.span()
-        if _no_overlap(span, matched_spans):
-            results.append({"type": "외국인등록번호", "value": m.group(), "span": span})
-            matched_spans.append(span)
+        num_span = (m.start(1), m.end(2))  
+        if _no_overlap(num_span, matched_spans):
+            results.append({"type": "외국인등록번호", "value": m.group(1) + m.group(2), "span": num_span})
+            matched_spans.append(num_span)
 
     for m in _CORP_KEYWORD2.finditer(text):
-        span = m.span()
-        if _no_overlap(span, matched_spans):
-            results.append({"type": "법인등록번호", "value": m.group(), "span": span})
-            matched_spans.append(span)
+        num_span = (m.start(1), m.end(2))  
+        if _no_overlap(num_span, matched_spans):
+            results.append({"type": "법인등록번호", "value": m.group(1) + m.group(2), "span": num_span})
+            matched_spans.append(num_span)
 
     for m in _RRN.finditer(text):
         if _no_overlap(m.span(), matched_spans):

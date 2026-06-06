@@ -277,6 +277,20 @@
       }
     }
 
+.message-text {
+  white-space: pre-wrap;
+}
+
+.message-text p,
+.message-text li,
+.message-text ol,
+.message-text ul,
+.message-text h1,
+.message-text h2,
+.message-text h3 {
+  white-space: normal;
+}
+
 .message-text ol,
 .message-text ul {
   margin: 2px 0;
@@ -286,7 +300,7 @@
 .message-text h1,
 .message-text h2,
 .message-text h3 {
-  font-size: 14px;  /* 헤더도 작게 */
+  font-size: 14px;
   margin: 6px 0 2px 0;
 }
 

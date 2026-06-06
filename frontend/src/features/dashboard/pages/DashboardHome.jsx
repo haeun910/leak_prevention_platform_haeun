@@ -12,14 +12,28 @@ function getEntityBreakdown(logs) {
   const counter = {};
   logs.forEach((log) => {
     if (!log.entity_types) return;
-    const types = String(log.entity_types).split(',');
+    
+    // entity_counts가 있으면 그걸 사용 (정확한 데이터)
+    if (log.entity_counts && Object.keys(log.entity_counts).length > 0) {
+      Object.entries(log.entity_counts).forEach(([raw, count]) => {
+        if (isDeprecatedEntityType(raw)) return;
+        const label = labelEntityType(raw) || raw;
+        counter[label] = (counter[label] || 0) + count;
+      });
+      return;
+    }
+
+    // entity_counts 없으면 기존 방식으로 폴백
+    const types = String(log.entity_types).split(',')
+      .map(t => t.trim())
+      .filter(t => t && !isDeprecatedEntityType(t));
+    if (types.length === 0) return;
     types.forEach((raw) => {
-      const t = raw.trim();
-      if (!t || isDeprecatedEntityType(t)) return;
-      const label = labelEntityType(t) || t;
-      counter[label] = (counter[label] || 0) + (log.masked_count || 1);
+      const label = labelEntityType(raw) || raw;
+      counter[label] = (counter[label] || 0) + Math.ceil((log.masked_count || 1) / types.length);
     });
   });
+
   return Object.entries(counter)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
@@ -65,16 +79,20 @@ function getPeriodLabel(period) {
 function logMatchesPeriod(log, period, label) {
   if (!log.timestamp) return false;
   const date = new Date(log.timestamp);
+
+  // KST 변환 (UTC+9)
+  const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
   if (period === 'day') {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getUTCDate()).padStart(2, '0');
     return `${month}/${day}` === label;
   }
   if (period === 'month') {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${date.getFullYear()}-${month}` === label;
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    return `${kstDate.getUTCFullYear()}-${month}` === label;
   }
-  return String(date.getFullYear()) === label;
+  return String(kstDate.getUTCFullYear()) === label;
 }
 
 function TrendLine({ data, selectedLabel, onSelectPoint }) {
@@ -187,7 +205,7 @@ function TopUsersCard({ users, onSelectUser }) {
   const top = [...users]
     .filter((u) => u.maskedCount > 0)
     .sort((a, b) => b.maskedCount - a.maskedCount)
-    .slice(0, 5);
+    .slice(0, 10);
   const maxCount = Math.max(...top.map((u) => u.maskedCount), 1);
 
   if (top.length === 0) return null;
@@ -492,13 +510,20 @@ function DashboardHome() {
     }
 
     const periodItem = maskingStats.find((item) => item.label === selectedKey) || firstPeriod;
+
+    const periodLogs = recentLogs.filter((log) => logMatchesPeriod(log, period, periodItem?.label));
+    console.log('periodLogs:', periodItem?.label, periodLogs.length, periodLogs); // 추가
+  
+    const periodBreakdown = getEntityBreakdown(periodLogs);
     return {
       type: 'period',
       key: periodItem?.label,
       kicker: getPeriodLabel(period),
       title: `${periodItem?.label || '기간'} 마스킹 상세`,
       count: periodItem?.count || 0,
-      breakdown: maskingStats.map((item) => ({ label: item.label, value: item.count })),
+      breakdown: periodBreakdown.length > 0
+        ? periodBreakdown
+        : maskingStats.map((item) => ({ label: item.label, value: item.count })),
       matchLog: (log) => logMatchesPeriod(log, period, periodItem?.label),
     };
   }, [coloredCategories, coloredDepartments, maskingStats, period, rawSummary, recentLogs, selectedInsight, summary, users]);

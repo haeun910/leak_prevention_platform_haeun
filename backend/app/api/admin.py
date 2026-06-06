@@ -131,7 +131,7 @@ def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_a
             .count(),
         },
         "masking_stats": {
-            "day": [{"label": key, "count": value} for key, value in sorted(by_day.items())[-7:]],
+            "day": [{"label": key, "count": value} for key, value in sorted(by_day.items())],
             "month": [{"label": key, "count": value} for key, value in sorted(by_month.items())[-6:]],
             "year": [{"label": key, "count": value} for key, value in sorted(by_year.items())[-5:]],
         },
@@ -147,8 +147,9 @@ def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_a
                 "risk_level": log.risk_level or "none",
                 "masked_count": log.masked_count or 0,
                 "session_id": log.session_id,
+                "entity_counts": log.entity_counts or {},  # 이거 추가!
             }
-            for log in logs[:10]
+            for log in logs[:365] # 최근 일간 확인 - 365일
         ],
     }
 
