@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, timedelta
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, create_engine
+from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -24,6 +24,7 @@ class User(Base):
     name = Column(String)
     department = Column(String)
     role = Column(String, default="user")
+    must_change_password = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(KST))
 
 
@@ -153,6 +154,12 @@ class ContactInquiry(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN must_change_password BOOLEAN DEFAULT 0"))
+            conn.commit()
+        except Exception:
+            pass
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.username == "admin").first()
@@ -165,11 +172,6 @@ def init_db():
                 role="admin",
             )
             db.add(admin)
-        else:
-            admin.password_hash = hash_password("12345678")
-            admin.name = "관리자"
-            admin.department = "운영"
-            admin.role = "admin"
         db.commit()
     finally:
         db.close()

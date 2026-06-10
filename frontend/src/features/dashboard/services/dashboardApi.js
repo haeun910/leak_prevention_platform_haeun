@@ -7,6 +7,7 @@ export const getDepartmentStats = () => api.get('/admin/dashboard/departments');
 export const getAdminUsers = () => api.get('/admin/users');
 export const updateAdminUser = (id, data) => api.patch(`/admin/users/${id}`, data);
 export const deleteAdminUser = (id) => api.delete(`/admin/users/${id}`);
+export const resetUserPassword = (id) => api.post(`/admin/users/${id}/reset-password`);
 export const getSecurityLogs = (params = {}) => api.get('/admin/logs', { params });
 export const getExceptionRequests = () => api.get('/admin/exception-requests');
 export const createExceptionRequest = (data) => api.post('/admin/exception-requests', data);

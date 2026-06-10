@@ -75,19 +75,8 @@ function Register() {
         department: form.department,
       });
 
-      const token = data.access_token;
-      const user = data.user;
-      sessionStorage.setItem('auth-Storage', JSON.stringify({ state: { token, user } }));
-      sessionStorage.setItem('userInfo', JSON.stringify({
-        email: user.username,
-        role: user.role,
-        name: user.name,
-        empId: form.empId.trim() || user.username,
-        department: user.department,
-      }));
-
-      await showAlert('회원가입이 완료되었습니다.');
-      navigate('/chat');
+      await showAlert('가입 신청이 완료되었습니다.\n관리자 승인 후 로그인하실 수 있습니다.');
+      navigate('/login');
     } catch (err) {
       setErrorMsg(err.response?.data?.detail || '회원가입에 실패했습니다.');
     }

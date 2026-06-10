@@ -16,17 +16,20 @@ api.interceptors.request.use((config) => {
 })
 
 // 401 → 로그인 페이지
+let isRedirecting = false
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     const requestUrl = err.config?.url || ''
     const isLoginRequest = requestUrl.includes('/auth/login')
-    if (err.response?.status === 401 && !isLoginRequest) {
+    if (err.response?.status === 401 && !isLoginRequest && !isRedirecting) {
+      isRedirecting = true
       sessionStorage.removeItem('auth-Storage')
       sessionStorage.removeItem('userInfo')
       localStorage.removeItem('auth-Storage')
       localStorage.removeItem('userInfo')
-      window.location.href = '/login'
+      window.location.replace('/login')
+      return new Promise(() => {})
     }
     return Promise.reject(err)
   }

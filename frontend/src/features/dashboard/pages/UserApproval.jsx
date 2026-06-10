@@ -32,6 +32,8 @@ function UserApproval() {
 
   useEffect(() => { load(); }, []);
 
+  const getApprovalRole = (user) => user.department === 'IT보안' ? 'admin' : 'user';
+
   const changeRole = async (user, role, confirmMsg) => {
     const ok = await showConfirm(confirmMsg);
     if (!ok) return;
@@ -98,35 +100,44 @@ function UserApproval() {
                   <th>이름</th>
                   <th>아이디 (이메일)</th>
                   <th>부서</th>
+                  <th>승인 시 권한</th>
                   <th>처리</th>
                 </tr>
               </thead>
               <tbody>
-                {pendingUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td>{u.name || '-'}</td>
-                    <td>{u.username}</td>
-                    <td>{u.department || '-'}</td>
-                    <td>
-                      <div className="approval-action-group">
-                        <button
-                          className="approval-btn approve"
-                          type="button"
-                          onClick={() => changeRole(u, 'user', `${u.name || u.username} 계정을 승인하시겠습니까?`)}
-                        >
-                          승인
-                        </button>
-                        <button
-                          className="approval-btn reject"
-                          type="button"
-                          onClick={() => changeRole(u, 'rejected', `${u.name || u.username} 계정의 가입을 거절하시겠습니까?`)}
-                        >
-                          거절
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {pendingUsers.map((u) => {
+                  const approvalRole = getApprovalRole(u);
+                  return (
+                    <tr key={u.id}>
+                      <td>{u.name || '-'}</td>
+                      <td>{u.username}</td>
+                      <td>{u.department || '-'}</td>
+                      <td>
+                        <span className={`role-pill ${approvalRole}`}>
+                          {approvalRole === 'admin' ? '관리자' : '일반 직원'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="approval-action-group">
+                          <button
+                            className="approval-btn approve"
+                            type="button"
+                            onClick={() => changeRole(u, approvalRole, `${u.name || u.username} 계정을 ${approvalRole === 'admin' ? '관리자' : '일반 직원'}으로 승인하시겠습니까?`)}
+                          >
+                            승인
+                          </button>
+                          <button
+                            className="approval-btn reject"
+                            type="button"
+                            onClick={() => changeRole(u, 'rejected', `${u.name || u.username} 계정의 가입을 거절하시겠습니까?`)}
+                          >
+                            거절
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

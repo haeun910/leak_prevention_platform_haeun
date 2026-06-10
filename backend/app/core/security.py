@@ -17,24 +17,15 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(data: dict) -> str:
-    from app.main import SERVER_START_TIME
-
     payload = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
-    payload.update({"exp": expire, "server_start": SERVER_START_TIME})
+    payload.update({"exp": expire})
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def decode_token(token: str) -> dict:
-    from app.main import SERVER_START_TIME
-
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        if payload.get("server_start") != SERVER_START_TIME:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="서버가 재시작되었습니다. 다시 로그인해 주세요.",
-            )
         return payload
     except JWTError:
         raise HTTPException(

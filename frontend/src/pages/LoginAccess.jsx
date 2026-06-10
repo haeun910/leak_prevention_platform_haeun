@@ -27,6 +27,16 @@ function LoginAccess() {
 
       const token = data.access_token;
       const user = data.user;
+
+      if (user.role === 'pending') {
+        setErrorMsg('아직 관리자 승인이 완료되지 않은 계정입니다.');
+        return;
+      }
+      if (user.role === 'rejected') {
+        setErrorMsg('가입이 거절된 계정입니다. 관리자에게 문의해주세요.');
+        return;
+      }
+
       sessionStorage.setItem('auth-Storage', JSON.stringify({ state: { token, user } }));
       sessionStorage.setItem('userInfo', JSON.stringify({
         email: user.username,
@@ -36,7 +46,7 @@ function LoginAccess() {
         department: user.department,
       }));
 
-      navigate('/chat');
+      navigate(user.role === 'admin' ? '/dashboard' : '/chat');
     } catch (err) {
       sessionStorage.removeItem('auth-Storage');
       sessionStorage.removeItem('userInfo');
@@ -94,7 +104,7 @@ function LoginAccess() {
         </form>
 
         <p className="register-link">
-          계정이 없으신가요? <Link to="/register">무료 체험 신청하기</Link>
+          계정이 없으신가요? <Link to="/register">회원가입</Link>
         </p>
       </section>
     </main>

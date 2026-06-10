@@ -10,9 +10,10 @@ DEFAULT_DATABASE_PATH = os.path.join(BASE_DIR, "admin_logs.db").replace(os.sep, 
 
 
 class Settings(BaseSettings):
-    ALLOWED_ORIGINS: List[str] = ["*"]
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     JWT_SECRET_KEY: str = "dev-secret-change-in-production"
+    TEMP_PASSWORD: str = "aimasking@0000"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60
 

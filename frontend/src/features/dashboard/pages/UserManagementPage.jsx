@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Trash2, UserX } from 'lucide-react';
+import { Search, Trash2, UserX, KeyRound } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
-import { deleteAdminUser, getAdminUsers, updateAdminUser } from '../services/dashboardApi';
+import { deleteAdminUser, getAdminUsers, resetUserPassword, updateAdminUser } from '../services/dashboardApi';
 import { useModal } from '../../../components/AppModal';
 import '../dashboard.css';
 
@@ -65,6 +65,19 @@ function UserManagementPage() {
       load();
     } catch (err) {
       await showAlert(err.response?.data?.detail || '퇴사 처리에 실패했습니다.');
+    }
+  };
+
+  const resetPassword = async (user) => {
+    const ok = await showConfirm(
+      `${user.name || user.username} 계정의 비밀번호를 임시 비밀번호로 초기화하시겠습니까?\n초기화 후 해당 사용자는 로그인 시 비밀번호 변경이 강제됩니다.`
+    );
+    if (!ok) return;
+    try {
+      await resetUserPassword(user.id);
+      await showAlert(`비밀번호가 임시 비밀번호로 초기화되었습니다.\n관리자에게 문의하여 임시 비밀번호를 전달받도록 안내해 주세요.`);
+    } catch (err) {
+      await showAlert(err.response?.data?.detail || '비밀번호 초기화에 실패했습니다.');
     }
   };
 
@@ -151,6 +164,15 @@ function UserManagementPage() {
                           <option value="pending">승인 대기</option>
                           <option value="rejected">퇴사/비활성</option>
                         </select>
+                        <button
+                          className="secondary"
+                          type="button"
+                          onClick={() => resetPassword(user)}
+                          title="임시 비밀번호로 초기화"
+                        >
+                          <KeyRound size={14} />
+                          비번 초기화
+                        </button>
                         <button
                           className="warning"
                           type="button"

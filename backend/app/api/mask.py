@@ -51,7 +51,7 @@ def protect_exception_keywords(text: str, keywords: list[str]) -> tuple[str, lis
     replacements = []
     for index, keyword in enumerate(keywords):
         token = f"__VEIL_EXCEPTION_{index}__"
-        protected_text, count = re.subn(re.escape(keyword), token, protected_text)
+        protected_text, count = re.subn(re.escape(keyword), token, protected_text, flags=re.IGNORECASE)
         if count:
             replacements.append((token, keyword))
     return protected_text, replacements

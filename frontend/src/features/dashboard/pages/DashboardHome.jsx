@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import StatCard from '../components/StatCard';
 import PeriodFilter from '../components/PeriodFilter';
@@ -332,6 +333,7 @@ function DetailPanel({ insight, recentLogs, totalMasked, onClose }) {
 }
 
 function DashboardHome() {
+  const navigate = useNavigate();
   const {
     period,
     setPeriod,
@@ -414,7 +416,6 @@ function DashboardHome() {
         }
       } else if (card?.id === 'highRisk') {
         filteredLogs = recentLogs.filter((log) => (log.risk_level || '').toLowerCase() === 'high');
-        console.log('고위험 필터 결과:', filteredLogs.length, filteredLogs.map(l => l.risk_level)); // 추가
         matchLog = (log) => (log.risk_level || '').toLowerCase() === 'high';
         kicker = '고위험 탐지 카테고리';
         entityBreakdown = getEntityBreakdown(filteredLogs);
@@ -503,8 +504,6 @@ function DashboardHome() {
     const periodItem = maskingStats.find((item) => item.label === selectedKey) || firstPeriod;
 
     const periodLogs = recentLogs.filter((log) => logMatchesPeriod(log, period, periodItem?.label));
-    console.log('periodLogs:', periodItem?.label, periodLogs.length, periodLogs); // 추가
-  
     const periodBreakdown = getEntityBreakdown(periodLogs);
     return {
       type: 'period',
@@ -531,7 +530,7 @@ function DashboardHome() {
             icon={item.icon}
             isActive={selectedDetail?.type === 'summary' && selectedDetail.key === item.id}
             key={item.id}
-            onClick={() => openInsight('summary', item.id)}
+            onClick={() => item.id === 'pendingRequests' ? navigate('/dashboard/exceptions') : openInsight('summary', item.id)}
             title={item.title}
             value={item.value}
           />

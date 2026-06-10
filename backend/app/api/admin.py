@@ -4,7 +4,6 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.database import (
@@ -17,7 +16,8 @@ from app.core.database import (
     User,
     get_db,
 )
-from app.core.security import decode_token
+from app.core.config import settings
+from app.core.security import decode_token, hash_password
 from app.schemas.models import DashboardStats, LogEntry
 
 # =====================================================
@@ -292,6 +292,18 @@ def update_user(user_id: int, body: dict, db: Session = Depends(get_db), current
     for key in ["name", "department", "role"]:
         if key in body:
             setattr(user, key, body[key])
+    db.commit()
+    return {"ok": True}
+
+
+# 사용자 비밀번호 초기화
+@router.post("/users/{user_id}/reset-password")
+def reset_user_password(user_id: int, db: Session = Depends(get_db), current_admin=Depends(get_current_admin)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    user.password_hash = hash_password(settings.TEMP_PASSWORD)
+    user.must_change_password = True
     db.commit()
     return {"ok": True}
 

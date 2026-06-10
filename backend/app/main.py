@@ -1,5 +1,3 @@
-import time
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,8 +11,6 @@ app = FastAPI(
     description="Enterprise information leak prevention and AI masking API",
     version="1.0.0",
 )
-
-SERVER_START_TIME = int(time.time())
 
 app.add_middleware(
     CORSMiddleware,
