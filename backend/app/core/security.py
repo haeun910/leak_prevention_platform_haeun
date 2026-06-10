@@ -56,6 +56,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="사용자를 찾을 수 없습니다.",
             )
+        if user.role in ("pending", "rejected"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="승인되지 않은 계정입니다.",
+            )
         return user
     finally:
         db.close()

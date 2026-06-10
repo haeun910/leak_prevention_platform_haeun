@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import { getAdminUsers, updateAdminUser } from '../services/dashboardApi';
+import { getDepartments } from '../../../api/client';
 import { useModal } from '../../../components/AppModal';
 import '../dashboard.css';
 
@@ -15,6 +16,7 @@ const roleLabels = {
 function UserApproval() {
   const { showConfirm, showAlert } = useModal();
   const [users, setUsers] = useState([]);
+  const [adminDepartments, setAdminDepartments] = useState([]);
   const [memberQuery, setMemberQuery] = useState('');
   const [memberRole, setMemberRole] = useState('all');
   const [memberDepartment, setMemberDepartment] = useState('all');
@@ -30,9 +32,14 @@ function UserApproval() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    getDepartments()
+      .then(({ data }) => setAdminDepartments(data.admin_departments || []))
+      .catch(() => {});
+  }, []);
 
-  const getApprovalRole = (user) => user.department === 'IT보안' ? 'admin' : 'user';
+  const getApprovalRole = (user) => adminDepartments.includes(user.department) ? 'admin' : 'user';
 
   const changeRole = async (user, role, confirmMsg) => {
     const ok = await showConfirm(confirmMsg);

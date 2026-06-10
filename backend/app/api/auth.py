@@ -24,6 +24,8 @@ DEPARTMENTS = [
     "IT보안",
 ]
 
+ADMIN_DEPARTMENTS = {"IT보안"}
+
 
 def _user_payload(user: User) -> dict:
     return {
@@ -49,8 +51,10 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     return TokenResponse(access_token=token, user=_user_payload(user))
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", status_code=201)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
+    if len(req.password) < 8:
+        raise HTTPException(status_code=400, detail="비밀번호는 8자 이상이어야 합니다.")
     if db.query(User).filter(User.username == req.username).first():
         raise HTTPException(status_code=400, detail="이미 사용 중인 아이디입니다.")
     if req.department not in DEPARTMENTS:
@@ -65,15 +69,12 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     )
     db.add(user)
     db.commit()
-    db.refresh(user)
-
-    token = create_access_token({"sub": user.username, "role": user.role})
-    return TokenResponse(access_token=token, user=_user_payload(user))
+    return {"status": "pending", "message": "가입 신청이 완료되었습니다. 관리자 승인 후 로그인하실 수 있습니다."}
 
 
 @router.get("/departments")
 def get_departments():
-    return {"departments": DEPARTMENTS}
+    return {"departments": DEPARTMENTS, "admin_departments": list(ADMIN_DEPARTMENTS)}
 
 
 @router.get("/me")

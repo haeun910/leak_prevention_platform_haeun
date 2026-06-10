@@ -24,9 +24,8 @@ import { ModalProvider } from './components/AppModal';
 //    - user가 /dashboard 접근 → /chat
 //    - admin이 /chat 접근 → /dashboard
 // =====================================================
-// ⚠️ 보안 위험: role 값이 localStorage에 저장되어 클라이언트에서 조작 가능
-// 현재는 목업 단계이므로 임시 허용
-// 백엔드 연동 시 JWT 또는 서버 세션 기반 권한 검증으로 교체 필요
+// ⚠️ 주의: 프론트엔드 role 검사는 UX 보호용. 실제 권한 강제는 백엔드에서 수행
+// (get_current_user 에서 pending/rejected 차단, admin 전용 API는 role 검증)
 function PrivateRoute({ children, requiredRole }) {
   const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || localStorage.getItem('userInfo') || '{}');
   const auth = JSON.parse(sessionStorage.getItem('auth-Storage') || localStorage.getItem('auth-Storage') || '{}');

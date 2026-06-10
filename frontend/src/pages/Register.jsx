@@ -53,8 +53,8 @@ function Register() {
     }
 
     // 4. 비밀번호 길이
-    if (form.password.length < 4) {
-      setErrorMsg('비밀번호는 4자 이상 입력해주세요.');
+    if (form.password.length < 8) {
+      setErrorMsg('비밀번호는 8자 이상 입력해주세요.');
       return;
     }
 
@@ -68,7 +68,7 @@ function Register() {
     }
 
     try {
-      const { data } = await registerApi({
+      await registerApi({
         username: form.email.toLowerCase(),
         password: form.password,
         name: form.name.trim(),
@@ -192,7 +192,7 @@ function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="비밀번호 (필수, 4자 이상)"
+              placeholder="비밀번호 (필수, 8자 이상)"
             />
           </div>
 
