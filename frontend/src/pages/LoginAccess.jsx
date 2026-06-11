@@ -46,7 +46,8 @@ function LoginAccess() {
         department: user.department,
       }));
 
-      navigate(user.role === 'admin' ? '/dashboard' : '/chat');
+      // admin도 일반 사용자와 동일하게 채팅 화면으로 진입 (대시보드는 사이드바 버튼으로 이동)
+      navigate('/chat');
     } catch (err) {
       sessionStorage.removeItem('auth-Storage');
       sessionStorage.removeItem('userInfo');
