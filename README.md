@@ -23,8 +23,7 @@ cp ../.env.example .env        # .env 파일 생성 후 API 키 입력
 uvicorn app.main:app --port 8000
 # → http://localhost:8000
 # → API 문서: http://localhost:8000/docs
-# ⚠️ 포트 8000 고정: Dockerfile / docker-compose / nginx.conf / frontend 프록시가 모두
-#    8000을 기준으로 연결되어 있습니다. 임의로 8001 등으로 바꾸지 마세요.
+# (8001 → 8000 수정: Dockerfile / docker-compose / nginx.conf / frontend 프록시가 모두 8000 기준이라 통일)
 ```
 
 ### 3. 프론트엔드 실행
