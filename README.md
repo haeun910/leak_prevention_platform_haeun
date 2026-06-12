@@ -20,10 +20,9 @@ pip install -r requirements.txt
 
 cp ../.env.example .env        # .env 파일 생성 후 API 키 입력
 
-uvicorn app.main:app --port 8000
-# → http://localhost:8000
-# → API 문서: http://localhost:8000/docs
-# (8001 → 8000 수정: Dockerfile / docker-compose / nginx.conf / frontend 프록시가 모두 8000 기준이라 통일)
+uvicorn app.main:app --port 8001
+# → http://localhost:8001
+# → API 문서: http://localhost:8001/docs
 ```
 
 ### 3. 프론트엔드 실행
