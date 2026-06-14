@@ -11,43 +11,32 @@ MODEL_DIR = os.path.join(os.path.dirname(__file__), "../../models")
 # 탐지 유형 한국어 변환 매핑
 NER_TYPE_KO = {
     "PERSON":         "이름",
-    "NAME":           "이름",
     "ADDRESS":        "주소",
     "PASSWORD":       "비밀번호",
-    "API_KEY":        "API키",
-    "CONTRACT_NAME":  "계약서",
-    "PROPOSAL_NAME":  "제안서",
-    "DOC_FILE":       "문서명",
-    "PROJECT_NAME":   "프로젝트",
-    "FINANCIAL_NUM":  "재무수치",
-    "ORG_NAME":       "기관명",
+    "DOCUNENT":       "문서명",
+    "PROJECT":        "프로젝트",
+    "FINANCIAL":      "재무수치",
+    "ORG":            "기관명",
 }
 
 # 마스킹 태깅 레이블
 NER_MASK_LABELS = {
     "PERSON":         "[이름]",
-    "NAME":           "[이름]",
     "ADDRESS":        "[주소]",
     "PASSWORD":       "[비밀번호]",
-    "API_KEY":        "[API키]",
-    "CONTRACT_NAME":  "[계약서]",
-    "PROPOSAL_NAME":  "[제안서]",
-    "DOC_FILE":       "[문서명]",
-    "PROJECT_NAME":   "[프로젝트]",
-    "FINANCIAL_NUM":  "[재무수치]",
-    "ORG_NAME":       "[기관명]",
+    "DOCUNENT":       "[파일명]",
+    "PROJECT":        "[프로젝트]",
+    "FINANCIAL":      "[재무수치]",
+    "ORG":            "[기관명]",
 }
 
 # 위험도 매핑
 NER_RISK_MAP = {
     "비밀번호":         "high",
-    "API 키":           "high",
-    "재무수치":         "high",
     "프로젝트":         "medium",
-    "제안서":           "medium",
     "주소":             "medium",
-    "계약서":           "medium",
-    "문서명":           "medium",
+    "파일명":           "medium",
+    "재무수치":         "low",
     "이름":             "low",
     "기관명":           "low",
 }
