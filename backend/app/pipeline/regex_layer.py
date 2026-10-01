@@ -40,8 +40,8 @@ def _get_risk(entity_type: str) -> str:
 # < 정규표현식 탐지 > ──────────────────────────────────────────
 # 1. 전화번호
 
-_PHONE = re.compile(
-    r'(?<!\d)'
+# 전화번호 공통 패턴
+_PHONE_BODY = (
     r'(?:'
         r'(?:0(?:2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|70|80))'
         r'[-\s]?\d{3,4}[-\s]?\d{4}'
@@ -49,13 +49,20 @@ _PHONE = re.compile(
         r'01[01]'
         r'[-\s]?\d{3,4}[-\s]?\d{4}'
     r')'
+)
+
+# 기본 전화번호 탐지 패턴
+_PHONE = re.compile(
+    r'(?<!\d)'
+    + _PHONE_BODY +
     r'(?!\d)'
 )
+
+# 키워드 기반 전화번호 탐지 패턴
 _PHONE_KEYWORDS = r'전화번호|전화|휴대폰|핸드폰|연락처|번호|TEL|tel|phone|mobile|연락|전번'
 _PHONE_KEYWORD = re.compile(
     r'(?:' + _PHONE_KEYWORDS + r')[\s:：\-]*'
-    r'(01[01][-\s]?\d{3,4}[-\s]?\d{4}'
-    r'|0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4})',
+    r'(' + _PHONE_BODY + r')',
     re.IGNORECASE
 )
 
@@ -64,9 +71,9 @@ def detect_phone(text: str) -> list:
     matched_spans = []
 
     for m in _PHONE_KEYWORD.finditer(text):
-        span = m.span()
+        span = m.span(1)
         if _no_overlap(span, matched_spans):
-            results.append({"type": "전화번호", "value": m.group(), "span": span})
+            results.append({"type": "전화번호", "value": m.group(1), "span": span})
             matched_spans.append(span)
 
     for m in _PHONE.finditer(text):
@@ -138,23 +145,92 @@ _CARD_KEYWORDS = (
 )
 _CARD_KEYWORD_PATTERN = re.compile(r'(?:' + _CARD_KEYWORDS + r')[\s:：\-]*', re.IGNORECASE)
 
+# 새 탐지 패턴을 넣어 수정
 def _make_card_pattern(bins, card_len):
-    trailing_map = {
-        16: r'[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{4}',
-        15: r'[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{3}',
-        14: r'[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{2}',
-    }
-    trailing = trailing_map[card_len]
-    bin4_groups = {}
-    for b in bins:
-        k = b[:4]
-        bin4_groups.setdefault(k, []).append(b[4:])
     parts = []
-    for b4, suffixes in bin4_groups.items():
-        suf_pat = '|'.join(sorted(set(suffixes)))
-        parts.append(rf'{b4}[-\s]?(?:{suf_pat})')
+
+    for bin_code in bins:
+        if not bin_code.isdigit():
+            continue
+
+        # BIN 길이에 따라 남은 카드번호 길이 계산
+        remaining_len = card_len - len(bin_code)
+
+        if remaining_len <= 0:
+            continue
+
+        # BIN 내부 구분자 처리
+        b4 = bin_code[:4]
+        suffix = bin_code[4:]
+
+        bin_pattern = rf'{b4}[-\s]?{suffix}'
+
+        # 16자리 카드
+        if card_len == 16:
+            if remaining_len == 10:      # 6자리 BIN
+                trailing = (
+                    r'[-\s]?\d{2}'
+                    r'[-\s]?\d{4}'
+                    r'[-\s]?\d{4}'
+                )
+
+            elif remaining_len == 8:     # 8자리 BIN
+                trailing = (
+                    r'[-\s]?\d{4}'
+                    r'[-\s]?\d{4}'
+                )
+
+            else:
+                continue
+
+        # 15자리 카드
+        elif card_len == 15:
+            if remaining_len == 9:       # 6자리 BIN
+                trailing = (
+                    r'[-\s]?\d{2}'
+                    r'[-\s]?\d{4}'
+                    r'[-\s]?\d{3}'
+                )
+
+            elif remaining_len == 7:     # 8자리 BIN
+                trailing = (
+                    r'[-\s]?\d{2}'
+                    r'[-\s]?\d{5}'
+                )
+
+            else:
+                continue
+
+        # 14자리 카드
+        elif card_len == 14:
+            if remaining_len == 8:       # 6자리 BIN
+                trailing = (
+                    r'[-\s]?\d{2}'
+                    r'[-\s]?\d{4}'
+                    r'[-\s]?\d{2}'
+                )
+
+            else:
+                continue
+
+        else:
+            continue
+
+        parts.append(
+            rf'{bin_pattern}{trailing}'
+        )
+
+    # 중복 패턴 제거
+    parts = list(dict.fromkeys(parts))
+
+    if not parts:
+        return re.compile(r'(?!x)x')
+
     bin_pat = '|'.join(parts)
-    return re.compile(rf'(?<!\d)(?:{bin_pat}){trailing}(?!\d)')
+
+    return re.compile(
+        rf'(?<!\d)(?:{bin_pat})(?!\d)'
+    )
 
 _CARD_PATTERNS = {
     "Visa":         _make_card_pattern(VISA_BINS, 16),
@@ -191,6 +267,7 @@ def detect_card(text: str) -> list:
                 matched_spans.append(span)
 
     return results
+
 
 # ──────────────────────────────────────────
 # 4. 차량번호
@@ -408,13 +485,14 @@ _PASSPORT = re.compile(r'(?<!\w)[MmSsRrOoDd]\d{8}(?!\d)')
 _PASSPORT_KEYWORDS = r'여권번호|여권|passport|PASSPORT|여권정보|출입국|출국|입국'
 _PASSPORT_KEYWORD = re.compile(
     r'(?:' + _PASSPORT_KEYWORDS + r')[\s:：\-]*'
-    r'([MmSsRrOoDdPp]\s?[A-Za-z0-9]{8})',
+    r'([MmSsRrOoDd]\d{8})',
     re.IGNORECASE
 )
 
 def detect_passport(text: str) -> list:
     results = []
     matched_spans = []
+
 
     for m in _PASSPORT_KEYWORD.finditer(text):
         if _no_overlap(m.span(), matched_spans):

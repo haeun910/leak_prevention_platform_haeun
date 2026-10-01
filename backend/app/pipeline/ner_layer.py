@@ -13,7 +13,7 @@ NER_TYPE_KO = {
     "PERSON":         "이름",
     "ADDRESS":        "주소",
     "PASSWORD":       "비밀번호",
-    "DOCUNENT":       "문서명",
+    "DOCUMENT":       "문서명",
     "PROJECT":        "프로젝트",
     "FINANCIAL":      "재무수치",
     "ORG":            "기관명",
@@ -24,7 +24,7 @@ NER_MASK_LABELS = {
     "PERSON":         "[이름]",
     "ADDRESS":        "[주소]",
     "PASSWORD":       "[비밀번호]",
-    "DOCUNENT":       "[파일명]",
+    "DOCUMENT":       "[파일명]",
     "PROJECT":        "[프로젝트]",
     "FINANCIAL":      "[재무수치]",
     "ORG":            "[기관명]",
@@ -119,7 +119,7 @@ def _apply_mask(text, entity_type, start, end, offset, entities): # 원본 단�
     original = text[start + offset: end + offset] 
 
     # 직책 태깅 레이블
-    JOB_TITLES = [
+    JOB_TITLES = [ 
         "대리", "과장", "차장", "부장", "팀장", "실장", "대표",
         "교수", "사원", "주임", "이사", "상무", "전무"
     ]
