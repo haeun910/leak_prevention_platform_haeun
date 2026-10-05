@@ -94,7 +94,7 @@ function Register() {
             <ShieldCheck size={22} />
           </div>
           <div>
-            <strong>SecureAI</strong>
+            <strong>Veil AI</strong>
             <span>Enterprise Masking Platform</span>
           </div>
         </nav>

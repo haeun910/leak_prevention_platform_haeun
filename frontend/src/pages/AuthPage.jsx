@@ -90,7 +90,7 @@ export default function AuthPage() {
           <div style={styles.logoIcon}>
             <Shield size={20} color="#3B82F6" strokeWidth={2} />
           </div>
-          <span style={styles.logoText}>SecureAI</span>
+          <span style={styles.logoText}>Veil AI</span>
         </div>
 
         <h1 style={styles.title}>
