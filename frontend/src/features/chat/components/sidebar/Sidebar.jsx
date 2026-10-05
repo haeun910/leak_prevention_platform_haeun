@@ -186,8 +186,8 @@ function Sidebar({
         <div className="sidebar-header">
           {!isCollapsed && (
             <div className="sidebar-brand">
-              <span className="sidebar-brand-mark">AI</span>
-              <span className="sidebar-brand-text">Secure Workspace</span>
+              <span className="sidebar-brand-mark">V</span>
+              <span className="sidebar-brand-text">Veil AI</span>
             </div>
           )}
           <button

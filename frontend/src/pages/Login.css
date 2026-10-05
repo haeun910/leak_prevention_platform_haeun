@@ -226,7 +226,7 @@
 }
 
 .risk-card,
-.message-row,
+.preview-chat .message-row,
 .preview-composer {
   border: 1px solid #dbe4ee;
   border-radius: 16px;
@@ -246,18 +246,19 @@
   font-size: 13px;
 }
 
-.message-row {
+/* 채팅 화면의 .message-row와 겹치지 않도록 미리보기 영역으로 범위를 제한 */
+.preview-chat .message-row {
   max-width: 78%;
   padding: 14px 16px;
   color: #334155;
 }
 
-.message-row.user {
+.preview-chat .message-row.user {
   align-self: flex-end;
   background: #edf3ff;
 }
 
-.message-row.assistant {
+.preview-chat .message-row.assistant {
   align-self: flex-start;
 }
 

@@ -1,5 +1,6 @@
 import re
 from app.schemas.models import DetectedEntity
+from app.pipeline.exception_keywords import find_keyword_spans, overlaps_any
 
 # ══════════════════════════════════════════════════════════════ < 정규표현식 개인정보 탐지 > ══════════════════════════════════════════════════════════════
 
@@ -716,8 +717,11 @@ def mask_text(text: str, detections: list) -> str:
 # ──────────────────────────────────────────
 # 통합 진입 함수 (API에서 호출)
 
-def detect_and_mask(text: str) -> dict:
+def detect_and_mask(text: str, exception_keywords=()) -> dict:
     detections = detect_all(text)
+    # 관리자가 승인한 예외 키워드와 겹치는 탐지 결과는 마스킹하지 않음
+    protected = find_keyword_spans(text, exception_keywords)
+    detections = [d for d in detections if not overlaps_any(d["span"], protected)]
     masked = mask_text(text, detections)
 
     entities = [

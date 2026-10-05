@@ -1,5 +1,6 @@
 from typing import List
 from app.schemas.models import DetectedEntity
+from app.pipeline.exception_keywords import find_keyword_spans, overlaps_any
 import os
 import threading
 # 토크나이저, 모델을 전역 변수 선언
@@ -128,7 +129,7 @@ def _validate_model(model, loading_info):
 
 
 # < 개인정보 탐지 및 마스킹 > ──────────────────────────────────────────
-def apply_ner_layer(text: str) -> tuple[str, List[DetectedEntity]]:
+def apply_ner_layer(text: str, exception_keywords=()) -> tuple[str, List[DetectedEntity]]:
     _add_windows_dll_dirs()
     import torch
     tokenizer, model = _load_model()
@@ -155,6 +156,7 @@ def apply_ner_layer(text: str) -> tuple[str, List[DetectedEntity]]:
     current_end = None 
     masked_text = text 
     offset = 0 # 마스킹 후 밀린 위치 보정값
+    protected = find_keyword_spans(text, exception_keywords) # 예외 키워드 위치 (마스킹 제외)
 
     # (3) BIO 태그 순회
     for pred_id, (char_start, char_end) in zip(predictions, offset_mapping):
@@ -163,7 +165,7 @@ def apply_ner_layer(text: str) -> tuple[str, List[DetectedEntity]]:
         label = id2label[pred_id]
         if label.startswith("B-"): # 새 엔티티 시작
             if current_entity:
-                masked_text, offset = _apply_mask(masked_text, current_entity, current_start, current_end, offset, entities)
+                masked_text, offset = _apply_mask(masked_text, current_entity, current_start, current_end, offset, entities, protected)
             current_entity = label[2:]
             current_start = char_start
             current_end = char_end
@@ -171,18 +173,20 @@ def apply_ner_layer(text: str) -> tuple[str, List[DetectedEntity]]:
             current_end = char_end
         else: # 엔티티 끝 → 이후 마스킹 실행
             if current_entity:
-                masked_text, offset = _apply_mask(masked_text, current_entity, current_start, current_end, offset, entities)
+                masked_text, offset = _apply_mask(masked_text, current_entity, current_start, current_end, offset, entities, protected)
             current_entity = None
     # (4) 마지막 엔티티 처리
     if current_entity:
-        masked_text, offset = _apply_mask(masked_text, current_entity, current_start, current_end, offset, entities)
+        masked_text, offset = _apply_mask(masked_text, current_entity, current_start, current_end, offset, entities, protected)
 
     return masked_text, entities
 
 
 # < 마스킹 처리 함수 > ──────────────────────────────────────────
-def _apply_mask(text, entity_type, start, end, offset, entities): # 원본 단어 추출 (현재 텍스트, 엔티티 타입, 엔티티 위치, 위치 보정값, 탐지 결과 리스트)
+def _apply_mask(text, entity_type, start, end, offset, entities, protected=()): # 원본 단어 추출 (현재 텍스트, 엔티티 타입, 엔티티 위치, 위치 보정값, 탐지 결과 리스트, 예외 키워드 위치)
     if entity_type not in NER_MASK_LABELS: # NER_MASK_LABELS에 없는 타입이면 마스킹하지 않고 그냥 반환
+        return text, offset
+    if overlaps_any((start, end), protected): # 관리자가 승인한 예외 키워드와 겹치면 마스킹하지 않음
         return text, offset
     label = NER_MASK_LABELS[entity_type] # 엔티티 타입과 맞는 마스킹 레이블 가져오기
     original = text[start + offset: end + offset] 

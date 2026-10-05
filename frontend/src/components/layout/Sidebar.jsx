@@ -21,7 +21,7 @@ export default function Sidebar({ conversations, currentId, onSelect, onCreate, 
       <div style={styles.header}>
         <div style={styles.logo}>
           <Shield size={16} color="var(--accent)" />
-          <span style={styles.logoText}>SecureAI</span>
+          <span style={styles.logoText}>Veil AI</span>
         </div>
         {user?.department && (
           <span style={styles.dept}>{user.department}</span>
