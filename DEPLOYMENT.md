@@ -1,4 +1,4 @@
-# 배포 가이드 (무료 구성)
+# 배포 가이드
 
 ```text
 브라우저
@@ -10,7 +10,7 @@
 | 구성 요소 | 서비스 | 비고 |
 |---|---|---|
 | 프론트엔드 | Vercel Hobby | 무료 |
-| 백엔드 | Hugging Face Spaces CPU basic | 무료, 16GB RAM. 48시간 미사용 시 잠들고 첫 접속에 1~2분 소요 |
+| 백엔드 | Hugging Face Spaces CPU basic | **PRO 구독 필요** (2026년 7월부터 Docker Space는 유료, 월 약 $9). 16GB RAM. 미사용 시 잠들고 첫 접속에 1~2분 소요 |
 | 모델 가중치 | Hugging Face 모델 저장소 | 무료, 비공개 가능 |
 | DB | Supabase Free | 무료, 500MB. 1주일 미사용 시 프로젝트 일시정지됨 (대시보드에서 재개) |
 
@@ -45,7 +45,7 @@ hf upload <HF아이디>/veil-roberta-ner backend/models . --private
 
 1. https://huggingface.co/new-space 에서 Space 생성
    - SDK: **Docker** → Blank
-   - Hardware: **CPU basic (Free)**
+   - Hardware: **CPU basic** (계정에 PRO 구독이 있어야 Docker SDK 선택 가능)
    - Visibility: **Public** (Vercel 프론트엔드가 호출해야 하므로 공개 필요. 코드만 공개되고 비밀값·모델은 노출되지 않음)
 2. Space의 **Settings → Variables and secrets** 에서 **Secret**으로 추가:
 
