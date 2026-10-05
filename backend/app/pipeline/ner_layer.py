@@ -1,10 +1,11 @@
 from typing import List
 from app.schemas.models import DetectedEntity
 import os
-os.environ["TRANSFORMERS_OFFLINE"] = "1" # guggingface 모델을 로컬에서만 사용하도록 강제
+import threading
 # 토크나이저, 모델을 전역 변수 선언
 _tokenizer = None
 _model = None
+_load_lock = threading.Lock()
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "../../models")
 
 
@@ -63,21 +64,46 @@ NER_RISK_MAP = {
 }
 
 
+# < 모델 가중치 확인 > ──────────────────────────────────────────
+# 가중치(model.safetensors)는 용량 문제로 git에 포함되지 않으므로,
+# 배포 환경에서는 NER_MODEL_REPO(Hugging Face 저장소)에서 내려받는다.
+def _ensure_model_weights(model_path):
+    if any((model_path / name).exists() for name in ("model.safetensors", "pytorch_model.bin")):
+        return
+    from app.core.config import settings
+    if not settings.NER_MODEL_REPO:
+        raise FileNotFoundError(
+            f"NER 모델 가중치가 없습니다: {model_path}. "
+            "model.safetensors를 배치하거나 NER_MODEL_REPO 환경변수를 설정해 주세요."
+        )
+    from huggingface_hub import snapshot_download
+    print(f"[NER] 모델 다운로드: {settings.NER_MODEL_REPO} → {model_path}")
+    snapshot_download(repo_id=settings.NER_MODEL_REPO, local_dir=str(model_path))
+
+
 # < 모델 로드 > ──────────────────────────────────────────
 def _load_model():
     global _tokenizer, _model
-    if _tokenizer is None or _model is None: # 싱글턴 패턴 : 불필요한 중복 로딩 방지
-        _add_windows_dll_dirs()
-        from transformers import AutoTokenizer, AutoModelForTokenClassification
-        from pathlib import Path   # ← 추가 
-
-        model_path = Path(os.path.abspath(MODEL_DIR))  # ← Path 객체로 변환 (허깅페이스가 안정적으로 처리하도록 함)
-        print(f"[NER] 로컬 모델 로딩: {model_path}")
-        _tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True) # 로컬 경로에서 토크나이저 불러옴
-        _model = AutoModelForTokenClassification.from_pretrained(model_path) # 모델을 로컬 경로에서 불러옴
-        _model.eval() # 모델을 추론 전용 모드로 전환
-        print("[NER] 모델 로드 완료")
+    with _load_lock:
+        if _tokenizer is None or _model is None: # 싱글턴 패턴 : 불필요한 중복 로딩 방지
+            _load_model_unlocked()
     return _tokenizer, _model
+
+
+def _load_model_unlocked():
+    global _tokenizer, _model
+    _add_windows_dll_dirs()
+    from transformers import AutoTokenizer, AutoModelForTokenClassification
+    from pathlib import Path   # ← 추가 
+
+    model_path = Path(os.path.abspath(MODEL_DIR))  # ← Path 객체로 변환 (허깅페이스가 안정적으로 처리하도록 함)
+    _ensure_model_weights(model_path)
+    print(f"[NER] 로컬 모델 로딩: {model_path}")
+    # local_files_only : 허깅페이스 모델을 로컬에서만 사용하도록 강제
+    _tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True, local_files_only=True) # 로컬 경로에서 토크나이저 불러옴
+    _model = AutoModelForTokenClassification.from_pretrained(model_path, local_files_only=True) # 모델을 로컬 경로에서 불러옴
+    _model.eval() # 모델을 추론 전용 모드로 전환
+    print("[NER] 모델 로드 완료")
 
 
 # < 개인정보 탐지 및 마스킹 > ──────────────────────────────────────────

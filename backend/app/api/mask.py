@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import uuid
 
@@ -54,9 +55,10 @@ def run_masking_pipeline(text: str):
 
 # < chat 엔드포인트 정의 > ← API (외부에 노출) : 프론트에서 HTTP 요청하면 받음
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db)):
+async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     session_id = req.session_id or str(uuid.uuid4())
-    masked_text, entities, overall_risk = run_masking_pipeline(req.text) # ← run_masking_pipeline() 호출 : 결과 반환
+    # NER 추론은 CPU를 오래 점유하므로 이벤트 루프를 막지 않도록 스레드풀에서 실행
+    masked_text, entities, overall_risk = await run_in_threadpool(run_masking_pipeline, req.text) # ← run_masking_pipeline() 호출 : 결과 반환
     was_masked = len(entities) > 0
 
     if was_masked:
@@ -92,7 +94,7 @@ async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db)):
 
 # < preview 엔드포인트 정의 > ← API (외부에 노출) : 프론트에서 HTTP 요청하면 받음
 @router.post("/preview", response_model=MaskResponse)
-async def preview_masking(req: MaskRequest):
+def preview_masking(req: MaskRequest, current_user=Depends(get_current_user)):
     """마스킹 결과 미리보기 (LLM 호출 없음)"""
     masked_text, entities, overall_risk = run_masking_pipeline(req.text) # ← run_masking_pipeline() 호출 : 결과 반환
     return MaskResponse(
@@ -164,7 +166,11 @@ def save_messages(conv_id: str, body: dict, db: Session = Depends(get_db), curre
                 role=m["role"],
                 content=m["content"],           # 마스킹된 텍스트만 저장
                 was_masked=m.get("was_masked", False),
-                entities=m.get("entities", []),
+                # 원문(original)은 개인정보이므로 DB에 저장하지 않음
+                entities=[
+                    {k: v for k, v in e.items() if k != "original"} if isinstance(e, dict) else e
+                    for e in (m.get("entities") or [])
+                ],
                 risk_level=m.get("risk_level", "none"),
             ))
     db.commit()

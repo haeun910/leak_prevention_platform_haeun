@@ -10,7 +10,8 @@ from app.core.security import hash_password
 
 KST = timezone(timedelta(hours=9))
 
-engine = create_engine(settings.DATABASE_URL, connect_args={"check_same_thread": False})
+connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -100,14 +101,15 @@ def init_db():
         if not admin:
             admin = User(
                 username="admin",
-                password_hash=hash_password("12345678"),
+                password_hash=hash_password(settings.ADMIN_PASSWORD or "12345678"),
                 name="관리자",
                 department="운영",
                 role="admin",
             )
             db.add(admin)
         else:
-            admin.password_hash = hash_password("12345678")
+            if settings.ADMIN_PASSWORD:
+                admin.password_hash = hash_password(settings.ADMIN_PASSWORD)
             admin.name = "관리자"
             admin.department = "운영"
             admin.role = "admin"

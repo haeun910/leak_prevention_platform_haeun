@@ -11,21 +11,48 @@ Browser
   -> Render persistent disk for SQLite
 ```
 
+## 0. Upload the NER model weights (one time)
+
+`backend/models/model.safetensors` is excluded from git (too large), so a server
+built from GitHub has no model and only regex masking works. Upload the model
+folder to a Hugging Face model repository (private is fine):
+
+```bash
+pip install huggingface_hub
+huggingface-cli login
+huggingface-cli upload <hf-username>/veil-koelectra-ner backend/models . --private
+```
+
+Then set `NER_MODEL_REPO=<hf-username>/veil-koelectra-ner` (and `HF_TOKEN` for a
+private repo) on the backend. The server downloads the weights on first start.
+
 ## Backend on Render
+
+The repository includes `render.yaml`, so you can use **New → Blueprint** and
+select this repository. Or set it up manually:
 
 1. Create a new Render Web Service.
 2. Use the `backend` directory as the service root.
 3. Select Docker as the runtime.
-4. Add a persistent disk mounted at `/data`.
-5. Set these environment variables:
+4. Choose an instance with at least 2 GB RAM (`standard`). torch + KoELECTRA
+   does not fit in the 512 MB `starter` plan.
+5. Add a persistent disk mounted at `/data`.
+6. Set these environment variables:
 
 ```text
 DATABASE_URL=sqlite:////data/admin_logs.db
 JWT_SECRET_KEY=<strong random secret>
+ADMIN_PASSWORD=<admin account password>
 OPENAI_API_KEY=<your OpenAI API key>
 OPENAI_MODEL=gpt-4o
-ALLOWED_ORIGINS=["https://your-vercel-app.vercel.app"]
+ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
+NER_MODEL_REPO=<hf-username>/veil-koelectra-ner
+HF_TOKEN=<Hugging Face read token, only for a private repo>
 ```
+
+`ALLOWED_ORIGINS` accepts a comma-separated list or a JSON array.
+If `ADMIN_PASSWORD` is not set, the `admin` account is created with the default
+password `12345678` — always set it in production.
 
 After the service is live, the backend URL will look like:
 
@@ -61,6 +88,11 @@ VITE_API_BASE_URL=https://leak-prevention-backend.onrender.com/api
 ```
 
 5. Deploy the frontend.
+
+`frontend/vercel.json` rewrites every path to `index.html`, so refreshing on
+`/chat` or `/dashboard` does not return a 404.
+
+6. Copy the Vercel URL into the backend's `ALLOWED_ORIGINS` and redeploy the backend.
 
 ## Updating after changes
 
