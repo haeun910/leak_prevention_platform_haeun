@@ -1,20 +1,27 @@
 services:
   - type: web
     name: leak-prevention-backend
-    env: docker
+    runtime: docker
     rootDir: backend
-    plan: starter
+    # torch + KLUE-RoBERTa 모델 로드에 약 1.5GB 메모리가 필요하므로 starter(512MB)는 메모리 부족으로 재시작됨
+    plan: standard
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
         value: sqlite:////data/admin_logs.db
       - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
         sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o
       - key: ALLOWED_ORIGINS
+        sync: false
+      - key: NER_MODEL_REPO
+        sync: false
+      - key: HF_TOKEN
         sync: false
     disk:
       name: backend-data
