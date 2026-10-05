@@ -15,6 +15,18 @@ def is_overlapping(span1, span2):
 def _no_overlap(span, matched_spans):
     return not any(is_overlapping(span, s) for s in matched_spans)
 
+# (3) 키워드 패턴 매칭에서 키워드를 뺀 '번호 부분(캡처 그룹)'의 위치와 값만 반환
+#     예) "연락처 010-1234-5678" → 마스킹 대상은 "010-1234-5678"만 (키워드 "연락처"는 남김)
+def _value_span(m):
+    spans = [m.span(i) for i in range(1, (m.re.groups or 0) + 1) if m.start(i) != -1]
+    if not spans:
+        return m.span()
+    return (min(s for s, _ in spans), max(e for _, e in spans))
+
+def _value_of(m, text):
+    start, end = _value_span(m)
+    return text[start:end]
+
 
 # < 위험도 매핑 > ──────────────────────────────────────────
 RISK_MAP = {
@@ -66,9 +78,10 @@ def detect_phone(text: str) -> list:
     matched_spans = []
 
     for m in _PHONE_KEYWORD.finditer(text):
-        span = m.span()
+        # 키워드("연락처", "번호" 등)는 남기고 번호 부분(그룹 1)만 마스킹
+        span = _value_span(m)
         if _no_overlap(span, matched_spans):
-            results.append({"type": "전화번호(키워드)", "value": m.group(), "span": span})
+            results.append({"type": "전화번호(키워드)", "value": _value_of(m, text), "span": span})
             matched_spans.append(span)
 
     for m in _PHONE.finditer(text):
@@ -98,18 +111,30 @@ _BUSINESS_REG_KW = re.compile(
     re.IGNORECASE
 )
 
+# 사업자등록번호 검증번호(마지막 자리) 확인 - 국세청 체크섬 규칙
+def _is_valid_business_reg(value: str) -> bool:
+    digits = [int(c) for c in re.sub(r'\D', '', value)]
+    if len(digits) != 10:
+        return False
+    weights = [1, 3, 7, 1, 3, 7, 1, 3, 5]
+    total = sum(d * w for d, w in zip(digits[:9], weights)) + (digits[8] * 5) // 10
+    return (10 - total % 10) % 10 == digits[9]
+
 def detect_business_reg(text: str) -> list:
     results = []
     matched_spans = []
 
     for m in _BUSINESS_REG_KW.finditer(text):
-        span = m.span()
+        span = _value_span(m)
         if _no_overlap(span, matched_spans):
-            results.append({"type": "사업자등록번호", "value": m.group(), "span": span})
+            results.append({"type": "사업자등록번호", "value": _value_of(m, text), "span": span})
             matched_spans.append(span)
 
     for m in _BUSINESS_REG.finditer(text):
         span = m.span()
+        # 키워드 없이 나온 경우 계좌번호 등과 구분하기 위해 검증번호가 맞을 때만 사업자등록번호로 인정
+        if not _is_valid_business_reg(m.group()):
+            continue
         if _no_overlap(span, matched_spans):
             results.append({"type": "사업자등록번호", "value": m.group(), "span": span})
             matched_spans.append(span)
@@ -129,67 +154,53 @@ DINERS_BINS = ['658010']
 LOCAL_PERSONAL_BINS = ['200001','200002','200003','200004','200005','200006','200007','200008','200009','200010','200011','200012','200013','200014','200015','200016','200017','200018','200019','200020','200021','200022','200023','200024','200025','200026','200027','200028','200029','200030','200031','200032','200033','200034','200035','200036','200037','200038','200039','200040','200041','200042','200043','200044','200045','200046','200047','200048','200049','200050','200051','200052','200053','200054','200055','200056','200057','200058','200059','200060','200061','200062','200063','200064','200065','200066','200067','200068','200069','200070','200071','200072','200073','200074','200075','200076','200077','200078','200079','200080','200081','200082','200083','200084','200085','200086','200087','200088','200089','200090','200091','200092','200093','200094','200095','200096','200097','200098','200099','205001','205002','205003','205004','205005','205006','205007','205008','205009','205010','940388','940701','940702','940703','940704','940706','940707','940708','940757','940910','940911','940912','940913','940914','940915','940916','940917','940918','940923','940924','940925','940937','940938','940939','940941','940943','940945','940947','940948','940949','940950','940951','940954','940955','940956','940957','940958','940960','940961','940962','940963','940964','940965','940967','940968','940969','940970','940971','940972','940973','940974','940975','940976','940977','940978','940979','940980','940981','940982','940983','940984','940985','940986','940987','940988','940989','940991','940999','941000','941002','941003','941004','941006','941009','941010','941011','941012','941013','941014','941015','941016','941017','941018','941020','941021','941022','941023','941024','941025','941027','941028','941029','941030','941031','941032','941034','941035','941036','941037','941038','941039','941040','941041','941042','941043','941045','941046','941047','941048','941050','941051','941052','941059','941060','941061','941062','941063','941070','941071','941073','941074','941075','941076','941077','941078','941080','941082','941083','941084','941085','941086','941087','941088','941089','941090','941091','941092','941093','941094','941096','941097','941098','941099','941103','941111','941112','941113','941116','941117','941120','941122','941124','941150','941154','941155','941156','941157','941158','941159','941160','941161','941163','941177','941178','941179','941180','941181','941183','941184','941185','941186','941187','941188','941189','941190','941191','941192','941194','941195','941199','941216','941217','941222','941224','941281','941316','941317','941381','941416','941417','941450','941511','941520','941607','941616','941617','941623','941631','941632','941634','941635','941636','941637','941639','941643','941645','941648','941650','941671','941681','941691','941696','941707','941711','941712','941722','941723','941724','941725','941731','941732','941734','941735','941736','941737','941739','941750','941781','941807','941907','999950','999960','999977','999999']
 LOCAL_CORPORATE_BINS = ['654111','654112','654211','654212','920086','940011','940012','940919','940920','940921','940922','940926','940927','940928','940929','940930','940931','940932','940933','940934','940935','940936','940940','940942','940952','940953','940966','941005','941008','941019','941026','941044','941049','941053','941056','941057','941058','941064','941065','941066','941067','941068','941069','941081','941581','941881','941934','941981','942065','942070','942075','942085','942101','943016','943017','943034','943116','943117','943132','943210','943211','943213','943316','943317','943416','943417','943647','943649','943714','943721','943726','943747','943907','943921','943924','943925','943950','943978','944122','944124','944203','944303','944306','944307','944311','944312','944320','944324','944331','944334','944350','944386','944524','944624','944664','944691','944696','945003','945006','945007','945011','945012','945020','945021','945023','945025','945027','945031','945032','945035','945039','945078','945081','945120','945220','945324','945420','945520','945620','945720','945811','945814','945817','945903','945920','946181','947003','947006','947011','947012','947020','947021','947023','947025','947027','947031','947032','947033','947039','947078','947203','947206','947211','947221','947225','947232','947239','947271','947520','948022','948120','948134','948220','948222','948224','948352','948816','948817','949020','949021','949022','949023','949024','949025','949026','949027','949029','949032','949033','949034','949035','949044','949045','949052','949054','949055','949067','949069','949096','949101','950061','950062','951001','951002','952020','952061','952062','952063','952064','953004']
 
-_CARD_KEYWORDS = (
-    r'카드번호|카드|신용카드|체크카드|선불카드|법인카드|개인카드|'
-    r'결제카드|결제|승인번호|'
-    r'비자|마스터|마스터카드|아멕스|제이씨비|은련|다이너스|'
-    r'VISA|MASTER|MASTERCARD|JCB|AMEX|UNIONPAY|DINERS|'
-    r'국민카드|신한카드|삼성카드|현대카드|롯데카드|우리카드|하나카드|BC카드|NH카드'
-)
-_CARD_KEYWORD_PATTERN = re.compile(r'(?:' + _CARD_KEYWORDS + r')[\s:：\-]*', re.IGNORECASE)
+# 브랜드별 카드번호 길이. 카드번호는 앞 6자리(BIN)와 전체 자릿수로 판단한다.
+# 숫자 묶는 방식(4-4-4-4, Amex 4-6-5, Diners 4-6-4, 붙여쓰기, 공백)과 무관하게 탐지하기 위해
+# 숫자 묶음을 이어 붙여 자릿수와 BIN을 확인하는 방식으로 구현한다.
+_CARD_BRANDS = [
+    (VISA_BINS, 16),
+    (MASTER_BINS, 16),
+    (JCB_BINS, 16),
+    (AMEX_BINS, 15),
+    (UNIONPAY_BINS, 16),
+    (DINERS_BINS, 14),
+    (LOCAL_PERSONAL_BINS, 16),
+    (LOCAL_CORPORATE_BINS, 16),
+]
+_CARD_BINS_BY_LEN = {}
+for _bins, _card_len in _CARD_BRANDS:
+    _CARD_BINS_BY_LEN.setdefault(_card_len, set()).update(_bins)
+_CARD_LENGTHS = sorted(_CARD_BINS_BY_LEN, reverse=True)  # 긴 길이부터 확인
 
-def _make_card_pattern(bins, card_len):
-    trailing_map = {
-        16: r'[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{4}',
-        15: r'[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{3}',
-        14: r'[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{2}',
-    }
-    trailing = trailing_map[card_len]
-    bin4_groups = {}
-    for b in bins:
-        k = b[:4]
-        bin4_groups.setdefault(k, []).append(b[4:])
-    parts = []
-    for b4, suffixes in bin4_groups.items():
-        suf_pat = '|'.join(sorted(set(suffixes)))
-        parts.append(rf'{b4}[-\s]?(?:{suf_pat})')
-    bin_pat = '|'.join(parts)
-    return re.compile(rf'(?<!\d)(?:{bin_pat}){trailing}(?!\d)')
-
-_CARD_PATTERNS = {
-    "Visa":         _make_card_pattern(VISA_BINS, 16),
-    "Mastercard":   _make_card_pattern(MASTER_BINS, 16),
-    "JCB":          _make_card_pattern(JCB_BINS, 16),
-    "Amex":         _make_card_pattern(AMEX_BINS, 15),
-    "은련":          _make_card_pattern(UNIONPAY_BINS, 16),
-    "다이너스":      _make_card_pattern(DINERS_BINS, 14),
-    "국내개인카드":  _make_card_pattern(LOCAL_PERSONAL_BINS, 16),
-    "국내법인카드":  _make_card_pattern(LOCAL_CORPORATE_BINS, 16),
-}
+# 하이픈/공백 한 칸으로 이어진 숫자 묶음 덩어리
+_CARD_CANDIDATE = re.compile(r'(?<![\d-])\d+(?:[-\s]\d+)*(?!\d)')
+_DIGIT_GROUP = re.compile(r'\d+')
 
 def detect_card(text: str) -> list:
     results = []
-    matched_spans = []
-
-    for kw_match in _CARD_KEYWORD_PATTERN.finditer(text):
-        after_kw = kw_match.end()
-        stripped = text[after_kw:].lstrip()
-        offset = len(text[after_kw:]) - len(stripped)
-        for name, pattern in _CARD_PATTERNS.items():
-            for m in pattern.finditer(stripped):
-                if m.start() == 0:
-                    real_span = (after_kw + offset + m.start(), after_kw + offset + m.end())
-                    if _no_overlap(real_span, matched_spans):
-                        results.append({"type": "카드번호", "value": m.group(), "span": real_span})
-                        matched_spans.append(real_span)
-
-    for name, pattern in _CARD_PATTERNS.items():
-        for m in pattern.finditer(text):
-            span = m.span()
-            if _no_overlap(span, matched_spans):
-                results.append({"type": "카드번호", "value": m.group(), "span": span})
-                matched_spans.append(span)
-
+    for cand in _CARD_CANDIDATE.finditer(text):
+        groups = [(cand.start() + g.start(), cand.start() + g.end()) for g in _DIGIT_GROUP.finditer(cand.group())]
+        i = 0
+        while i < len(groups):
+            found = None
+            # 묶음 i부터 이어 붙여서 카드번호 길이 + BIN이 맞는 가장 긴 조합을 찾음
+            digits = ""
+            ends = []
+            for j in range(i, len(groups)):
+                digits += text[groups[j][0]:groups[j][1]]
+                if len(digits) > _CARD_LENGTHS[0]:
+                    break
+                ends.append((j, digits))
+            for j, d in reversed(ends):
+                if len(d) in _CARD_BINS_BY_LEN and d[:6] in _CARD_BINS_BY_LEN[len(d)]:
+                    found = j
+                    break
+            if found is None:
+                i += 1
+                continue
+            span = (groups[i][0], groups[found][1])
+            results.append({"type": "카드번호", "value": text[span[0]:span[1]], "span": span})
+            i = found + 1
     return results
 
 
@@ -363,12 +374,13 @@ _IPv6 = re.compile(
         rf'|(?:[0-9A-Fa-f]{{1,4}}:){{1,2}}(?::[0-9A-Fa-f]{{1,4}}){{1,5}}'
         rf'|[0-9A-Fa-f]{{1,4}}:(?::[0-9A-Fa-f]{{1,4}}){{1,6}}'
         rf'|:(?::[0-9A-Fa-f]{{1,4}}){{1,7}}'
-        rf'|::'
     rf')'
     rf'(?:%[0-9A-Za-z_.-]+)?'
     rf'(?![:\w])',
     re.IGNORECASE
 )
+
+_VERSION_BEFORE = re.compile(r'(?:버전|version|ver\.?|v)\s*$', re.IGNORECASE)
 
 def detect_ip(text: str) -> list:
     results = []
@@ -380,11 +392,14 @@ def detect_ip(text: str) -> list:
             matched_spans.append(m.span())
 
     for m in _IPv4_KEYWORD.finditer(text):
-        if _no_overlap(m.span(), matched_spans):
-            results.append({"type": "IPv4(키워드)", "value": m.group(), "span": m.span()})
-            matched_spans.append(m.span())
+        span = _value_span(m)
+        if _no_overlap(span, matched_spans):
+            results.append({"type": "IPv4(키워드)", "value": _value_of(m, text), "span": span})
+            matched_spans.append(span)
 
     for m in _IPv4.finditer(text):
+        if _VERSION_BEFORE.search(text[max(0, m.start() - 12):m.start()]):  # "버전 1.2.3.4" 같은 버전 번호는 제외
+            continue
         if _no_overlap(m.span(), matched_spans):
             results.append({"type": "IPv4", "value": m.group(), "span": m.span()})
             matched_spans.append(m.span())
@@ -396,12 +411,24 @@ def detect_ip(text: str) -> list:
 # ──────────────────────────────────────────
 # 9. 여권번호
 
-_PASSPORT = re.compile(r'(?<!\w)[MmSsRrOoDd]\d{8}(?!\d)')
-_PASSPORT_KEYWORDS = r'여권번호|여권|passport|PASSPORT|여권정보|출입국|출국|입국'
-_PASSPORT_KEYWORD = re.compile(
-    r'(?:' + _PASSPORT_KEYWORDS + r')[\s:：\-]*'
-    r'([MmSsRrOoDd]\s?[A-Za-z0-9]{8})',
+# 한국 여권번호: 여권 종류 영문 대문자 1자리 + 숫자 8자리 (구여권, 예: M12345678)
+#               또는 영문 1자리 + 숫자 3자리 + 영문 1자리 + 숫자 4자리 (2021년 이후 신여권, 예: M123A4567)
+#   M: 일반, S: 관용, D: 외교관, R: 거주, O: 긴급(관용)
+_PASSPORT_NUM = r'[MSDRO](?:\d{8}|\d{3}[A-Z]\d{4})'
+# 키워드 없이 나온 경우: 대문자 정확한 형식만, 앞뒤에 영문·숫자·하이픈이 붙은 코드(제품 코드 등)는 제외
+_PASSPORT = re.compile(rf'(?<![A-Za-z0-9_\-]){_PASSPORT_NUM}(?![A-Za-z0-9_\-])')
+# 주문번호·모델명 등 여권이 아닌 식별 코드 앞에 흔히 오는 단어 → 이 단어 바로 뒤의 코드는 여권번호로 보지 않음
+_PASSPORT_EXCLUDE_BEFORE = re.compile(
+    r'(?:주문|모델|제품|상품|품번|품목|코드|송장|운송장|시리얼|일련|사번|학번|버전|'
+    r'order|model|product|item|code|sku|serial|invoice|ver)'
+    r'\s*(?:번호|명|no\.?|number|id)?\s*[:：#\-]?\s*$',
     re.IGNORECASE
+)
+_PASSPORT_KEYWORDS = r'여권번호|여권정보|여권|passport\s*(?:no\.?|number)?'
+# 키워드가 있는 경우: 소문자·여권 문자 뒤 공백까지 허용 (예: "여권 m 12345678")
+_PASSPORT_KEYWORD = re.compile(
+    r'(?i:' + _PASSPORT_KEYWORDS + r')[은는이가의도요를]?[\s:：\-]*'
+    r'([MSDROmsdro]\s?(?:\d{8}|\d{3}[A-Za-z]\d{4}))(?![A-Za-z0-9])'
 )
 
 def detect_passport(text: str) -> list:
@@ -409,11 +436,14 @@ def detect_passport(text: str) -> list:
     matched_spans = []
 
     for m in _PASSPORT_KEYWORD.finditer(text):
-        if _no_overlap(m.span(), matched_spans):
-            results.append({"type": "여권번호(키워드)", "value": m.group(), "span": m.span()})
-            matched_spans.append(m.span())
+        span = _value_span(m)
+        if _no_overlap(span, matched_spans):
+            results.append({"type": "여권번호(키워드)", "value": _value_of(m, text), "span": span})
+            matched_spans.append(span)
 
     for m in _PASSPORT.finditer(text):
+        if _PASSPORT_EXCLUDE_BEFORE.search(text[max(0, m.start() - 15):m.start()]):
+            continue
         if _no_overlap(m.span(), matched_spans):
             results.append({"type": "여권번호", "value": m.group(), "span": m.span()})
             matched_spans.append(m.span())
@@ -458,21 +488,21 @@ def detect_rrn_frn(text: str) -> list:
     matched_spans = []
 
     for m in _RRN_KEYWORD.finditer(text):
-        span = m.span()
+        span = _value_span(m)
         if _no_overlap(span, matched_spans):
-            results.append({"type": "주민등록번호(키워드)", "value": m.group(), "span": span})
+            results.append({"type": "주민등록번호(키워드)", "value": _value_of(m, text), "span": span})
             matched_spans.append(span)
 
     for m in _FRN_KEYWORD.finditer(text):
-        span = m.span()
+        span = _value_span(m)
         if _no_overlap(span, matched_spans):
-            results.append({"type": "외국인등록번호(키워드)", "value": m.group(), "span": span})
+            results.append({"type": "외국인등록번호(키워드)", "value": _value_of(m, text), "span": span})
             matched_spans.append(span)
 
     for m in _CORP_KEYWORD2.finditer(text):
-        span = m.span()
+        span = _value_span(m)
         if _no_overlap(span, matched_spans):
-            results.append({"type": "법인등록번호(키워드)", "value": m.group(), "span": span})
+            results.append({"type": "법인등록번호(키워드)", "value": _value_of(m, text), "span": span})
             matched_spans.append(span)
 
     for m in _RRN.finditer(text):
@@ -530,21 +560,33 @@ _ACC_PATTERNS = {
         r'((?:\d{2,6}-\d{2,6}-\d{2,6}(?:-\d{1,6})?|\d{9,14}))',
         re.IGNORECASE
     ),
+    # IBAN 후보: 국가코드 2자리 + 검증숫자 2자리 + 계좌 식별자 (공백/하이픈 구분 허용)
+    #  → 실제 IBAN인지는 _is_valid_iban()의 mod-97 검증으로 확정
     "iban": re.compile(
-        r'(?:(?:IBAN|국제\s*계좌)\s*[::=]?\s*)?'
         r'(?<![A-Za-z0-9])'
         r'[A-Za-z]{2}\d{2}(?:[ -]?[A-Za-z0-9]){10,30}'
-        r'(?![A-Za-z0-9])',
-        re.IGNORECASE
+        r'(?![A-Za-z0-9])'
     ),
+    # SWIFT/BIC: 은행 4 + 국가 2 + 지역 2 (+ 지점 3), 모두 대문자.
+    #  일반 영어 단어(password, document 등)와 구분하기 위해 대문자만 허용하고,
+    #  앞쪽에 은행·송금 관련 단어가 있을 때만 탐지 (_SWIFT_CONTEXT)
     "swift_bic": re.compile(
-        r'(?:(?:SWIFT|BIC|스위프트|은행\s*코드)\s*[:：=]?\s*)?'
         r'(?<![A-Za-z0-9])'
-        r'[A-Za-z]{4}[A-Za-z]{2}[A-Za-z0-9]{2}(?:[A-Za-z0-9]{3})?'
-        r'(?![A-Za-z0-9])',
-        re.IGNORECASE
+        r'[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?'
+        r'(?![A-Za-z0-9])'
     ),
 }
+
+_SWIFT_CONTEXT = re.compile(r'(?:SWIFT|BIC|스위프트|은행|뱅크|bank|송금|해외\s*계좌)', re.IGNORECASE)
+_DATE_LIKE = re.compile(r'^(?:19|20)\d{2}-(?:0?[1-9]|1[0-2])-(?:0?[1-9]|[12]\d|3[01])$')
+
+def _is_valid_iban(value: str) -> bool:
+    iban = re.sub(r'[ -]', '', value).upper()
+    if not (15 <= len(iban) <= 34) or not iban[:2].isalpha() or not iban[2:4].isdigit():
+        return False
+    rearranged = iban[4:] + iban[:4]
+    numeric = ''.join(str(int(ch, 36)) for ch in rearranged)
+    return int(numeric) % 97 == 1
 
 def detect_accounts(text: str) -> list:
     results = []
@@ -559,18 +601,24 @@ def detect_accounts(text: str) -> list:
 
     for m in _ACC_PATTERNS["iban"].finditer(text):
         span = m.span()
+        if not _is_valid_iban(m.group()):  # 검증숫자가 맞지 않으면 IBAN이 아님
+            continue
         if _no_overlap(span, matched_spans):
             results.append({"type": "계좌번호(IBAN)", "value": m.group().upper(), "span": span})
             matched_spans.append(span)
 
     for m in _ACC_PATTERNS["swift_bic"].finditer(text):
         span = m.span()
+        if not _SWIFT_CONTEXT.search(text[max(0, m.start() - 20):m.start()]):  # 은행 관련 문맥이 없으면 일반 단어로 봄
+            continue
         if _no_overlap(span, matched_spans):
             results.append({"type": "은행코드(SWIFT)", "value": m.group().upper(), "span": span})
             matched_spans.append(span)
 
     for m in _ACC_PATTERNS["domestic_account"].finditer(text):
         span = m.span()
+        if _DATE_LIKE.match(m.group()):  # 2024-01-15 같은 날짜는 계좌번호가 아님
+            continue
         if _no_overlap(span, matched_spans):
             results.append({"type": "계좌번호(국내/일반)", "value": m.group(), "span": span})
             matched_spans.append(span)
@@ -581,80 +629,30 @@ def detect_accounts(text: str) -> list:
 # < 정규표현식 통합 탐지 >──────────────────────────────────────────
 
 def detect_all(text: str) -> list:
-    '''matched_spans 함수를 써서 함수 간 공유가 필요 
-     >> 안 하면 각 탐지 함수가 자기 담당만 보고 전체를 조율하는 곳이 없음 '''
+    '''여러 탐지 함수가 같은 숫자를 중복으로 잡지 않도록 matched_spans를 공유한다.
+    형식이 엄격하거나 검증 규칙이 있는 항목을 먼저 탐지하고,
+    형식이 느슨한 계좌번호는 다른 항목이 잡지 않은 숫자만 탐지하도록 뒤쪽에 둔다.'''
     results = []
     matched_spans = []  # ← 전체 공유
 
-    # 1. 전화번호 먼저
-    for d in detect_phone(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    # 2. 계좌번호는 전화번호 피해서
-    for d in detect_accounts(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    # 3. 나머지도 동일하게
-    for d in detect_business_reg(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_card(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_vehicle(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_cash_receipt(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_corp_reg(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_email(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_ip(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_passport(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    for d in detect_rrn_frn(text):
-        if _no_overlap(d["span"], matched_spans):
-            results.append(d)
-            matched_spans.append(d["span"])
-
-    '''results += detect_phone(text)
-    results += detect_accounts(text)
-    results += detect_business_reg(text)
-    results += detect_card(text)
-    results += detect_vehicle(text)
-    results += detect_cash_receipt(text)
-    results += detect_corp_reg(text)
-    results += detect_email(text)
-    results += detect_ip(text)
-    results += detect_passport(text)
-    results += detect_rrn_frn(text)'''
+    detectors = [
+        detect_phone,         # 1. 전화번호
+        detect_card,          # 2. 카드번호 (BIN 검증)
+        detect_rrn_frn,       # 3. 주민·외국인·법인등록번호 (생년월일·성별 자리 검증)
+        detect_business_reg,  # 4. 사업자등록번호 (키워드 또는 검증번호)
+        detect_accounts,      # 5. 계좌번호 / IBAN / SWIFT
+        detect_vehicle,
+        detect_cash_receipt,
+        detect_corp_reg,
+        detect_email,
+        detect_ip,
+        detect_passport,
+    ]
+    for detector in detectors:
+        for d in detector(text):
+            if _no_overlap(d["span"], matched_spans):
+                results.append(d)
+                matched_spans.append(d["span"])
     return results
 
 
@@ -728,7 +726,7 @@ def detect_and_mask(text: str, exception_keywords=()) -> dict:
             DetectedEntity(
                 original=d["value"],
                 masked=make_mask(d["type"]),
-                entity_type=d["type"],
+                entity_type=make_mask(d["type"]).strip("[]"),  # 화면 표시용 항목명 (예: "전화번호(키워드)" → "전화번호")
                 start=d["span"][0],
                 end=d["span"][1],
                 stage="regex",

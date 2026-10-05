@@ -218,7 +218,7 @@ def _apply_mask(text, entity_type, start, end, offset, entities, protected=()): 
                 entities.append(DetectedEntity(
                     original=name_part,
                     masked=label,
-                    entity_type=entity_type,
+                    entity_type=label.strip("[]"),
                     start=adj_start,
                     end=adj_end,
                     stage="ner",
@@ -237,7 +237,7 @@ def _apply_mask(text, entity_type, start, end, offset, entities, protected=()): 
     entities.append(DetectedEntity(
         original=original, # 원본
         masked=label, # 마스킹
-        entity_type=entity_type, # 엔티티 타입
+        entity_type=label.strip("[]"), # 화면 표시용 항목명 (예: PERSON → 이름)
         start=adj_start, # 시작
         end=adj_end, # 끝
         stage="ner", # 탐지 단계
