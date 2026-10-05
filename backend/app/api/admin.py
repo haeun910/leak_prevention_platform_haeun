@@ -15,6 +15,7 @@ from app.core.database import (
     MaskingLog,
     User,
     get_db,
+    now_kst,
 )
 from app.core.security import decode_token
 from app.schemas.models import DashboardStats, LogEntry
@@ -63,8 +64,8 @@ def _entity_count(message: ChatMessage) -> int:
 @router.get("/dashboard/summary")
 def get_dashboard_summary(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     logs = db.query(MaskingLog).order_by(MaskingLog.timestamp.desc()).all()
-    today = datetime.now(KST).date()
-    month = datetime.now(KST).month
+    today = now_kst().date()
+    month = now_kst().month
 
     by_day = Counter()
     by_month = Counter()
@@ -291,7 +292,7 @@ def update_exception_request(request_id: int, body: dict, db: Session = Depends(
     for key in ["keyword", "requester", "department", "reason", "status"]:
         if key in body:
             setattr(row, key, body[key])
-    row.updated_at = datetime.now(KST)
+    row.updated_at = now_kst()
 
     if row.status == "approved" and row.keyword:
         exists = db.query(ExceptionKeyword).filter(ExceptionKeyword.keyword == row.keyword).first()
@@ -361,7 +362,7 @@ def update_exception_keyword(keyword_id: int, body: dict, db: Session = Depends(
     for key in ["keyword", "category", "description", "enabled"]:
         if key in body:
             setattr(row, key, body[key])
-    row.updated_at = datetime.now(KST)
+    row.updated_at = now_kst()
     db.commit()
     return {"ok": True}
 

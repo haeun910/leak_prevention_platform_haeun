@@ -1,3 +1,4 @@
+import threading
 import time
 
 from fastapi import FastAPI
@@ -32,6 +33,16 @@ app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 @app.on_event("startup")
 async def startup():
     init_db()
+    # NER 모델을 백그라운드에서 미리 로드해 첫 요청 지연을 줄임 (실패해도 정규식 마스킹은 동작)
+    threading.Thread(target=_warmup_ner, daemon=True).start()
+
+
+def _warmup_ner():
+    try:
+        from app.pipeline.ner_layer import _load_model
+        _load_model()
+    except Exception as e:
+        print("[NER] 사전 로드 실패 (정규식 마스킹만 사용):", repr(e))
 
 
 @app.get("/")
