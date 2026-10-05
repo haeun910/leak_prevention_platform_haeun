@@ -83,7 +83,6 @@ def _ensure_model_weights(model_path):
 
 # < 모델 로드 > ──────────────────────────────────────────
 def _load_model():
-    global _tokenizer, _model
     with _load_lock:
         if _tokenizer is None or _model is None: # 싱글턴 패턴 : 불필요한 중복 로딩 방지
             _load_model_unlocked()

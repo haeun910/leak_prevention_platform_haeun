@@ -10,7 +10,7 @@ from app.pipeline.risk_layer import apply_risk_layer
 from app.llm.openai import get_openai_llm
 from app.llm.anthropic import get_anthropic_llm
 from app.llm.gemini import get_gemini_llm
-from app.core.database import get_db, MaskingLog, ChatConversation, ChatMessage, ExceptionRequest
+from app.core.database import get_db, now_kst, MaskingLog, ChatConversation, ChatMessage, ExceptionRequest
 from app.core.security import get_current_user  # JWT에서 유저 꺼내는 함수
 from datetime import datetime, timezone, timedelta
 KST = timezone(timedelta(hours=9))
@@ -155,7 +155,7 @@ def save_messages(conv_id: str, body: dict, db: Session = Depends(get_db), curre
         db.add(conv)
     else:
         conv.title = body.get("title", conv.title)
-        conv.updated_at = datetime.now(KST)
+        conv.updated_at = now_kst()
 
     for m in body.get("messages", []):
         exists = db.query(ChatMessage).filter(ChatMessage.id == m["id"]).first()
