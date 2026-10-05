@@ -3,12 +3,16 @@
 ## 실행 방법
 
 ### 1. 모델 파일 배치
+`klue/roberta-base`를 파인튜닝한 뒤 `model.save_pretrained()` / `tokenizer.save_pretrained()`로 저장한 폴더를 그대로 넣습니다.
+(config.json의 id2label에 PERSON, ADDRESS 등 마스킹 레이블이 들어 있어야 합니다.)
 ```
 backend/models/
 ├── config.json
 ├── model.safetensors
 ├── tokenizer.json
-└── tokenizer_config.json
+├── tokenizer_config.json
+├── special_tokens_map.json
+└── vocab.txt
 ```
 
 ### 2. 백엔드 실행
@@ -42,7 +46,7 @@ npm run dev
 
 ## 기술 스택
 
-- **Backend**: Python, FastAPI, SQLAlchemy, KoELECTRA
+- **Backend**: Python, FastAPI, SQLAlchemy, KLUE-RoBERTa (klue/roberta-base 파인튜닝)
 - **Frontend**: React, Vite, Zustand, Axios
 - **LLM**: OpenAI GPT-4o (Claude, Gemini 추후 지원 예정)
 

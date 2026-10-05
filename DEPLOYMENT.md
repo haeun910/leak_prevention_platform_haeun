@@ -1,16 +1,16 @@
-# 배포 가이드 (무료 구성)
+# 배포 가이드
 
 ```text
 브라우저
   -> Vercel (React 프론트엔드)
-  -> Hugging Face Spaces (FastAPI 백엔드 + KoELECTRA NER 모델, Docker)
+  -> Hugging Face Spaces (FastAPI 백엔드 + KLUE-RoBERTa NER 모델, Docker)
   -> Supabase (PostgreSQL DB)
 ```
 
 | 구성 요소 | 서비스 | 비고 |
 |---|---|---|
 | 프론트엔드 | Vercel Hobby | 무료 |
-| 백엔드 | Hugging Face Spaces CPU basic | 무료, 16GB RAM. 48시간 미사용 시 잠들고 첫 접속에 1~2분 소요 |
+| 백엔드 | Hugging Face Spaces CPU basic | **PRO 구독 필요** (2026년 7월부터 Docker Space는 유료, 월 약 $9). 16GB RAM. 미사용 시 잠들고 첫 접속에 1~2분 소요 |
 | 모델 가중치 | Hugging Face 모델 저장소 | 무료, 비공개 가능 |
 | DB | Supabase Free | 무료, 500MB. 1주일 미사용 시 프로젝트 일시정지됨 (대시보드에서 재개) |
 
@@ -29,12 +29,14 @@ postgresql://postgres.<project-ref>:[YOUR-PASSWORD]@aws-0-ap-northeast-2.pooler.
 
 ## 2. Hugging Face — 모델 업로드 (한 번만)
 
-`backend/models/model.safetensors`는 용량 때문에 git에 포함되지 않습니다. 모델 폴더를 **비공개** 모델 저장소에 올립니다.
+`klue/roberta-base`를 파인튜닝해 `save_pretrained()`로 저장한 폴더(config.json, model.safetensors, 토크나이저 파일)를
+`backend/models`에 넣은 뒤, **비공개** 모델 저장소에 올립니다. 가중치는 용량 때문에 git에 포함되지 않습니다.
+파인튜닝하지 않은 `klue/roberta-base` 원본은 NER 분류 레이어가 없어서 서버가 로드를 거부합니다.
 
 ```bash
 pip install -U huggingface_hub
 hf auth login                      # https://huggingface.co/settings/tokens 에서 Write 토큰 발급
-hf upload <HF아이디>/veil-koelectra-ner backend/models . --private
+hf upload <HF아이디>/veil-roberta-ner backend/models . --private
 ```
 
 그리고 **Read 권한 토큰**을 하나 더 발급해 둡니다 (Space가 비공개 모델을 내려받을 때 사용, 아래 `HF_TOKEN`).
@@ -43,7 +45,7 @@ hf upload <HF아이디>/veil-koelectra-ner backend/models . --private
 
 1. https://huggingface.co/new-space 에서 Space 생성
    - SDK: **Docker** → Blank
-   - Hardware: **CPU basic (Free)**
+   - Hardware: **CPU basic** (계정에 PRO 구독이 있어야 Docker SDK 선택 가능)
    - Visibility: **Public** (Vercel 프론트엔드가 호출해야 하므로 공개 필요. 코드만 공개되고 비밀값·모델은 노출되지 않음)
 2. Space의 **Settings → Variables and secrets** 에서 **Secret**으로 추가:
 
@@ -52,7 +54,7 @@ DATABASE_URL=<1단계에서 복사한 Supabase Session pooler URI>
 JWT_SECRET_KEY=<길고 랜덤한 문자열>
 ADMIN_PASSWORD=<관리자(admin) 계정 비밀번호>
 OPENAI_API_KEY=<OpenAI API 키>
-NER_MODEL_REPO=<HF아이디>/veil-koelectra-ner
+NER_MODEL_REPO=<HF아이디>/veil-roberta-ner
 HF_TOKEN=<Read 토큰>
 ALLOWED_ORIGINS=*            # 5단계에서 Vercel 주소로 변경
 ```

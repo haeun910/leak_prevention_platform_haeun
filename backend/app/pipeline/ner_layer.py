@@ -99,10 +99,32 @@ def _load_model_unlocked():
     _ensure_model_weights(model_path)
     print(f"[NER] 로컬 모델 로딩: {model_path}")
     # local_files_only : 허깅페이스 모델을 로컬에서만 사용하도록 강제
-    _tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True, local_files_only=True) # 로컬 경로에서 토크나이저 불러옴
-    _model = AutoModelForTokenClassification.from_pretrained(model_path, local_files_only=True) # 모델을 로컬 경로에서 불러옴
-    _model.eval() # 모델을 추론 전용 모드로 전환
-    print("[NER] 모델 로드 완료")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True, local_files_only=True) # 로컬 경로에서 토크나이저 불러옴
+    model, loading_info = AutoModelForTokenClassification.from_pretrained(
+        model_path, local_files_only=True, output_loading_info=True
+    ) # 모델을 로컬 경로에서 불러옴
+    _validate_model(model, loading_info)
+    model.eval() # 모델을 추론 전용 모드로 전환
+    _tokenizer, _model = tokenizer, model
+    print(f"[NER] 모델 로드 완료 ({model.config.model_type}, 레이블 {len(model.config.id2label)}개)")
+
+
+# < 모델 검증 > ──────────────────────────────────────────
+# 파인튜닝되지 않은 베이스 모델(klue/roberta-base 등)이나 config와 가중치가 맞지 않는 모델은
+# 분류 레이어가 랜덤 값으로 채워져 엉뚱한 단어를 마스킹하므로 로드 단계에서 막는다.
+def _validate_model(model, loading_info):
+    missing = loading_info.get("missing_keys") or []
+    if missing:
+        raise RuntimeError(
+            f"NER 모델 가중치가 config와 맞지 않습니다 (누락된 가중치 {len(missing)}개, 예: {missing[:3]}). "
+            "파인튜닝 후 save_pretrained로 저장한 폴더 전체(config.json, 토크나이저 포함)를 사용해 주세요."
+        )
+    labels = {label.split("-", 1)[-1] for label in model.config.id2label.values()}
+    if not labels & NER_MASK_LABELS.keys():
+        raise RuntimeError(
+            f"NER 모델 레이블({sorted(labels)[:5]} ...)이 마스킹 레이블과 맞지 않습니다. "
+            "파인튜닝 시 id2label/label2id를 config에 저장했는지 확인해 주세요."
+        )
 
 
 # < 개인정보 탐지 및 마스킹 > ──────────────────────────────────────────

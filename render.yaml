@@ -3,7 +3,7 @@ services:
     name: leak-prevention-backend
     runtime: docker
     rootDir: backend
-    # torch + KoELECTRA 모델 로드에 약 1.5GB 메모리가 필요하므로 starter(512MB)는 메모리 부족으로 재시작됨
+    # torch + KLUE-RoBERTa 모델 로드에 약 1.5GB 메모리가 필요하므로 starter(512MB)는 메모리 부족으로 재시작됨
     plan: standard
     healthCheckPath: /
     envVars:
