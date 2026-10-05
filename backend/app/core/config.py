@@ -20,8 +20,7 @@ class Settings(BaseSettings):
     # 설정 시 서버 시작마다 admin 계정 비밀번호를 이 값으로 맞춤 (미설정 시 최초 생성에만 기본값 사용)
     ADMIN_PASSWORD: str = ""
 
-    NER_MODEL_NAME: str = "monologg/koelectra-base-v3-naver-ner"
-    # backend/models 에 가중치가 없을 때 내려받을 Hugging Face 저장소 (예: username/veil-koelectra-ner)
+    # backend/models 에 가중치가 없을 때 내려받을 Hugging Face 저장소 (예: username/veil-roberta-ner)
     # 비공개 저장소라면 HF_TOKEN 환경변수도 함께 설정
     NER_MODEL_REPO: str = ""
 
