@@ -39,7 +39,7 @@ function DashboardSidebar({ userInfo }) {
         </div>
         <div>
           <div className="dashboard-logo-title">Admin</div>
-          <div className="dashboard-logo-subtitle">AI Masking Platform</div>
+          <div className="dashboard-logo-subtitle">Veil AI</div>
         </div>
       </div>
 

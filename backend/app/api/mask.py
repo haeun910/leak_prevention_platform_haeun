@@ -10,7 +10,7 @@ from app.pipeline.risk_layer import apply_risk_layer
 from app.llm.openai import get_openai_llm
 from app.llm.anthropic import get_anthropic_llm
 from app.llm.gemini import get_gemini_llm
-from app.core.database import get_db, now_kst, MaskingLog, ChatConversation, ChatMessage, ExceptionRequest
+from app.core.database import get_db, now_kst, MaskingLog, ChatConversation, ChatMessage, ExceptionKeyword, ExceptionRequest
 from app.core.security import get_current_user  # JWT에서 유저 꺼내는 함수
 from datetime import datetime, timezone, timedelta
 KST = timezone(timedelta(hours=9))
@@ -23,13 +23,19 @@ LLM_PROVIDERS = {
     "gemini": get_gemini_llm,
 }
 
+# < 예외 키워드 조회 > : 관리자가 등록·승인하고 활성화한 키워드는 마스킹하지 않음
+def load_exception_keywords(db: Session) -> list:
+    rows = db.query(ExceptionKeyword.keyword).filter(ExceptionKeyword.enabled == True).all()  # noqa: E712
+    return [row.keyword for row in rows if row.keyword]
+
+
 # < 마스킹 파이프라인 (내부 로직) > : 텍스트 받아서 마스킹하고 엔티티 반환
-def run_masking_pipeline(text: str):
+def run_masking_pipeline(text: str, exception_keywords=()):
     original_text = text
     all_entities = []
 
     # 1차 정규표현식 필터링 : 마스킹 된 텍스트 반환
-    result = detect_and_mask(original_text) # ← dict 반환
+    result = detect_and_mask(original_text, exception_keywords) # ← dict 반환
     text_after_regex = result["masked"]  # ← 마스킹 된 텍스트
     regex_entities = result["detections"]
     all_entities.extend(regex_entities) # ← 엔티티 목록
@@ -37,7 +43,7 @@ def run_masking_pipeline(text: str):
     # 2차 모델 필터링
     # 로컬 NER 모델/torch 환경이 준비되지 않아도 정규식 마스킹과 LLM 흐름은 유지한다.
     try:
-        text_after_ner, ner_entities = apply_ner_layer(text_after_regex)
+        text_after_ner, ner_entities = apply_ner_layer(text_after_regex, exception_keywords)
         all_entities.extend(ner_entities)
     except Exception as e:
         print("NER ERROR:", repr(e))
@@ -58,7 +64,8 @@ def run_masking_pipeline(text: str):
 async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     session_id = req.session_id or str(uuid.uuid4())
     # NER 추론은 CPU를 오래 점유하므로 이벤트 루프를 막지 않도록 스레드풀에서 실행
-    masked_text, entities, overall_risk = await run_in_threadpool(run_masking_pipeline, req.text) # ← run_masking_pipeline() 호출 : 결과 반환
+    exception_keywords = load_exception_keywords(db)
+    masked_text, entities, overall_risk = await run_in_threadpool(run_masking_pipeline, req.text, exception_keywords) # ← run_masking_pipeline() 호출 : 결과 반환
     was_masked = len(entities) > 0
 
     if was_masked:
@@ -94,9 +101,9 @@ async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), cur
 
 # < preview 엔드포인트 정의 > ← API (외부에 노출) : 프론트에서 HTTP 요청하면 받음
 @router.post("/preview", response_model=MaskResponse)
-def preview_masking(req: MaskRequest, current_user=Depends(get_current_user)):
+def preview_masking(req: MaskRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """마스킹 결과 미리보기 (LLM 호출 없음)"""
-    masked_text, entities, overall_risk = run_masking_pipeline(req.text) # ← run_masking_pipeline() 호출 : 결과 반환
+    masked_text, entities, overall_risk = run_masking_pipeline(req.text, load_exception_keywords(db)) # ← run_masking_pipeline() 호출 : 결과 반환
     return MaskResponse(
         # original_text는 보안 정책 상 개인정보를 포함 가능성이 있는 것도 있으니 응답에 포함하지 않음 ⇒ 필드 제거
         masked_text=masked_text,

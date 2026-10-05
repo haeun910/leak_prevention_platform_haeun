@@ -51,7 +51,7 @@ export default function AdminPage() {
           </button>
           <div style={styles.logoWrap}>
             <Shield size={18} color="var(--accent)" />
-            <span style={styles.logoText}>SecureAI</span>
+            <span style={styles.logoText}>Veil AI</span>
           </div>
           <span style={styles.divider}>/</span>
           <span style={styles.pageLabel}>관리자 대시보드</span>

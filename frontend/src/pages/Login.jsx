@@ -47,12 +47,12 @@ function Login() {
   return (
     <main className="landing-page">
       <header className="landing-nav">
-        <a className="auth-brand" href="#top" aria-label="SecureAI">
+        <a className="auth-brand" href="#top" aria-label="Veil AI">
           <div className="auth-brand-mark">
             <ShieldCheck size={22} />
           </div>
           <div>
-            <strong>SecureAI</strong>
+            <strong>Veil AI</strong>
             <span>Enterprise Masking Platform</span>
           </div>
         </a>
@@ -94,7 +94,7 @@ function Login() {
           </div>
           <div className="preview-body">
             <div className="preview-sidebar">
-              <b>Secure Workspace</b>
+              <b>Veil AI</b>
               <span className="active-line"></span>
               <span></span>
               <span></span>

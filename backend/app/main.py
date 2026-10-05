@@ -3,14 +3,16 @@ import time
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from app.api import admin, auth, mask
 from app.core.config import settings
-from app.core.database import init_db
+from app.core.database import engine, init_db
 
 
 app = FastAPI(
-    title="AI Masking Platform",
+    title="Veil AI",
     description="Enterprise information leak prevention and AI masking API",
     version="1.0.0",
 )
@@ -47,4 +49,17 @@ def _warmup_ner():
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "AI Masking Platform API"}
+    return {"status": "ok", "message": "Veil AI API"}
+
+
+# < 상태 확인 > : DB까지 실제로 조회해 서버·DB가 살아 있는지 확인한다.
+# 하루 한 번 외부에서 호출해 Supabase 무료 플랜의 비활성 일시정지와 HF Space 잠들기를 막는 용도로 사용.
+@app.get("/api/health")
+def health():
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT count(*) FROM users"))
+    except Exception as e:
+        print("[HEALTH] DB 확인 실패:", repr(e))
+        return JSONResponse(status_code=503, content={"status": "error", "db": "unreachable"})
+    return {"status": "ok", "db": "ok"}
