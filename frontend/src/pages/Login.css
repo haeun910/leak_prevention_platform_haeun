@@ -636,3 +636,94 @@
     padding: 24px;
   }
 }
+
+/* 랜딩 미리보기 마스킹 시연 (MaskingDemo) */
+.demo-risk {
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
+.demo-risk.is-high {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.demo-risk.is-medium {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.preview-chat .demo-input {
+  display: block;
+  white-space: pre-wrap;
+  min-height: 52px;
+  line-height: 1.6;
+}
+
+.demo-hit {
+  border-radius: 4px;
+  white-space: nowrap;
+  background: #fee2e2;
+  color: #b91c1c;
+  box-shadow: 0 0 0 2px #fee2e2;
+  animation: demo-pulse 0.9s ease-in-out infinite;
+}
+
+.demo-mask {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #16415f;
+  color: #ffffff;
+  font-size: 0.92em;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: demo-pop 0.35s ease-out;
+}
+
+.demo-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: #16415f;
+  animation: demo-blink 0.9s steps(1) infinite;
+}
+
+.preview-chat .demo-reply {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.preview-chat .demo-reply.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes demo-pulse {
+  50% { background: #fecaca; box-shadow: 0 0 0 2px #fecaca; }
+}
+
+@keyframes demo-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes demo-blink {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-hit,
+  .demo-mask,
+  .demo-caret {
+    animation: none;
+  }
+
+  .preview-chat .demo-reply {
+    transition: none;
+  }
+}
