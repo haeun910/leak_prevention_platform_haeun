@@ -55,6 +55,10 @@ function ChatPage() {
   // 메시지 목록 맨 아래를 가리키는 ref (자동 스크롤용)
   const messagesEndRef = useRef(null);
 
+  // 비동기 응답 처리 중에도 가장 최근 렌더링의 채팅 목록을 읽기 위한 ref
+  const chatsRef = useRef(chats);
+  chatsRef.current = chats;
+
   // ===== 초기 currentChatId 설정 =====
   // hook의 isDataLoaded가 true가 되는 순간 한 번만 실행
   // - ProjectPage에서 navigate('/chat', { state: { chatId } })로 넘어온 경우 해당 채팅 선택
@@ -214,25 +218,27 @@ function ChatPage() {
         riskLevel: data.overall_risk || 'none',
       };
 
-      let savedTitle = chatTitle;
-      let savedMessages = [];
-      setChats(prev => prev.map(chat => {
-        if (chat.id !== targetChatId) return chat;
-        const nextTitle = chatTitle !== null ? chatTitle : chat.title;
-        const nextMessages = chat.messages
-          .map((message) => (message.id === userMessageId ? maskedUserMessage : message))
-          .concat(aiMessage);
-        savedTitle = nextTitle;
-        savedMessages = nextMessages;
-        return {
-          ...chat,
-          messages: nextMessages,
-          title: nextTitle,
-          updatedAt: new Date().toISOString(),
-        };
-      }));
+      // setChats의 updater는 나중에(다음 렌더링 때) 실행될 수 있어서,
+      // 그 안에서 저장할 값을 꺼내면 빈 배열이 저장됨 → 최신 상태(chatsRef)로 먼저 계산한 뒤 반영·저장
+      const currentChat = chatsRef.current.find(chat => chat.id === targetChatId);
+      // 제목도 DB에 저장되므로 원문이 아닌 마스킹된 질문으로 만듦
+      const nextTitle = chatTitle !== null ? generateChatTitle(data.question) : currentChat?.title;
+      const nextMessages = (currentChat?.messages || [])
+        .map((message) => (message.id === userMessageId ? maskedUserMessage : message))
+        .concat(aiMessage);
 
-      await saveConversation(targetChatId, savedTitle || generateChatTitle(originalText), savedMessages);
+      setChats(prev => prev.map(chat => (
+        chat.id === targetChatId
+          ? {
+              ...chat,
+              messages: nextMessages,
+              title: nextTitle,
+              updatedAt: new Date().toISOString(),
+            }
+          : chat
+      )));
+
+      await saveConversation(targetChatId, nextTitle || generateChatTitle(data.question), nextMessages);
     } catch (err) {
       const aiMessage = {
         id: crypto.randomUUID(),
