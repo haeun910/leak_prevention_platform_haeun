@@ -2,13 +2,16 @@
 
 실행: backend 폴더에서 `python -m tools.benchmark_pipeline --repeat 20`
 - 문장 길이별로 정규식 / NER / 위험도 / 합계 시간을 반복 측정해 평균과 p95를 출력
-- 첫 호출은 모델 로딩이 포함되므로 따로 표시하고 통계에서는 제외
+- 모델 로딩 시간은 따로 표시하고 통계에서는 제외, 모델을 불러올 수 없으면 측정하지 않음
 """
 import argparse
+import math
 import statistics
+import sys
 import time
 
 from app.api.mask import run_masking_pipeline
+from app.pipeline.ner_layer import _load_model
 
 SAMPLES = {
     "짧은 문장": "고객 연락처 010-2345-6789로 안내해 줘",
@@ -25,7 +28,8 @@ STAGES = ("regex", "ner", "risk", "total")
 
 def p95(values):
     ordered = sorted(values)
-    return ordered[max(0, int(len(ordered) * 0.95) - 1)]
+    # nearest-rank 방식: 올림해야 느린 실행이 p95에서 빠지지 않음
+    return ordered[max(0, math.ceil(len(ordered) * 0.95) - 1)]
 
 
 def main():
@@ -33,11 +37,13 @@ def main():
     parser.add_argument("--repeat", type=int, default=20)
     args = parser.parse_args()
 
-    # 첫 호출 (모델 로딩 포함)
-    first = {}
+    # 모델 로딩 (파이프라인은 NER 실패 시에도 정규식만으로 계속 동작하므로, 측정 전에 따로 확인)
     t0 = time.perf_counter()
-    run_masking_pipeline(SAMPLES["짧은 문장"], timings=first)
-    print(f"\n첫 호출 (모델 로딩 포함): {(time.perf_counter() - t0) * 1000:.1f}ms\n")
+    try:
+        _load_model()
+    except Exception as e:
+        sys.exit(f"NER 모델을 불러올 수 없어 측정을 중단합니다: {e!r}")
+    print(f"\n모델 로딩: {(time.perf_counter() - t0) * 1000:.1f}ms\n")
 
     print(f"{'문장':<8}{'글자':>6}" + "".join(f"{s + ' 평균':>14}{s + ' p95':>12}" for s in STAGES))
     for name, text in SAMPLES.items():
