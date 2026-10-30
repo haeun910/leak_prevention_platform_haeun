@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
+import time
 import uuid
 
 from app.schemas.models import ChatRequest, ChatResponse, MaskRequest, MaskResponse
@@ -30,15 +31,18 @@ def load_exception_keywords(db: Session) -> list:
 
 
 # < 마스킹 파이프라인 (내부 로직) > : 텍스트 받아서 마스킹하고 엔티티 반환
-def run_masking_pipeline(text: str, exception_keywords=()):
+# timings에 dict를 넘기면 단계별 소요 시간(ms)을 채워 줌 (regex / ner / risk / total)
+def run_masking_pipeline(text: str, exception_keywords=(), timings=None):
     original_text = text
     all_entities = []
+    t_start = time.perf_counter()
 
     # 1차 정규표현식 필터링 : 마스킹 된 텍스트 반환
     result = detect_and_mask(original_text, exception_keywords) # ← dict 반환
     text_after_regex = result["masked"]  # ← 마스킹 된 텍스트
     regex_entities = result["detections"]
     all_entities.extend(regex_entities) # ← 엔티티 목록
+    t_regex = time.perf_counter()
 
     # 2차 모델 필터링
     # 로컬 NER 모델/torch 환경이 준비되지 않아도 정규식 마스킹과 LLM 흐름은 유지한다.
@@ -48,6 +52,7 @@ def run_masking_pipeline(text: str, exception_keywords=()):
     except Exception as e:
         print("NER ERROR:", repr(e))
         text_after_ner = text_after_regex
+    t_ner = time.perf_counter()
 
     # 3차 위험도 판정
     text_after_risk, all_entities, overall_risk = apply_risk_layer(
@@ -55,7 +60,23 @@ def run_masking_pipeline(text: str, exception_keywords=()):
         original_text=original_text,
         entities=all_entities,
     )
-    
+    t_end = time.perf_counter()
+
+    # 단계별 소요 시간 기록 (원문은 로그에 남기지 않고 글자 수만 기록)
+    elapsed = {
+        "regex": (t_regex - t_start) * 1000,
+        "ner": (t_ner - t_regex) * 1000,
+        "risk": (t_end - t_ner) * 1000,
+        "total": (t_end - t_start) * 1000,
+    }
+    if timings is not None:
+        timings.update(elapsed)
+    print(
+        f"[TIMING] pipeline chars={len(original_text)} "
+        f"regex={elapsed['regex']:.1f}ms ner={elapsed['ner']:.1f}ms "
+        f"risk={elapsed['risk']:.1f}ms total={elapsed['total']:.1f}ms"
+    )
+
     return text_after_risk, all_entities, overall_risk
 
 
@@ -63,6 +84,7 @@ def run_masking_pipeline(text: str, exception_keywords=()):
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     session_id = req.session_id or str(uuid.uuid4())
+    t_request = time.perf_counter()
     # NER 추론은 CPU를 오래 점유하므로 이벤트 루프를 막지 않도록 스레드풀에서 실행
     exception_keywords = load_exception_keywords(db)
     masked_text, entities, overall_risk = await run_in_threadpool(run_masking_pipeline, req.text, exception_keywords) # ← run_masking_pipeline() 호출 : 결과 반환
@@ -84,10 +106,17 @@ async def chat_with_masking(req: ChatRequest, db: Session = Depends(get_db), cur
 
     try:
         llm = LLM_PROVIDERS[provider]()
+        t_llm = time.perf_counter()
         answer = await llm.chat([{"role": "user", "content": masked_text}])
+        t_done = time.perf_counter()
     except Exception as e:
         print("LLM ERROR:", repr(e))
         raise HTTPException(status_code=502, detail=f"LLM API 오류: {str(e)}")
+    # 마스킹 → LLM 응답까지 전체 처리 시간
+    print(
+        f"[TIMING] chat provider={provider} llm={(t_done - t_llm) * 1000:.1f}ms "
+        f"total={(t_done - t_request) * 1000:.1f}ms"
+    )
     '''# LLM 호출 제거 (임시)
     answer = "[LLM 비활성화 상태] 마스킹 결과만 반환합니다."'''
 

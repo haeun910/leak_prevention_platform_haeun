@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, CheckCircle2, LockKeyhole, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, BarChart3, CheckCircle2, FileWarning, LockKeyhole, ShieldCheck, Sparkles } from 'lucide-react';
 import { login as loginApi } from '../api/client';
-import MaskingDemo from '../components/landing/MaskingDemo';
 import './Login.css';
 
 function Login() {
@@ -101,7 +100,15 @@ function Login() {
               <span></span>
             </div>
             <div className="preview-chat">
-              <MaskingDemo />
+              <div className="risk-card">
+                <FileWarning size={18} />
+                <div>
+                  <strong>민감정보 감지</strong>
+                  <p>주민등록번호, 연락처, 내부 프로젝트명 자동 마스킹</p>
+                </div>
+              </div>
+              <div className="message-row user">고객 김** / 연락처 010-****-****</div>
+              <div className="message-row assistant">마스킹된 내용으로 안전하게 전송됩니다.</div>
               <div className="preview-composer">
                 <span>응답 모델</span>
                 <b>GPT</b>
