@@ -7,12 +7,12 @@
   -> Supabase (PostgreSQL DB)
 ```
 
-| 구성 요소 | 서비스 | 비고 |
-|---|---|---|
-| 프론트엔드 | Vercel Hobby | 무료 |
-| 백엔드 | Hugging Face Spaces CPU basic | **PRO 구독 필요** (2026년 7월부터 Docker Space는 유료, 월 약 $9). 16GB RAM. 미사용 시 잠들고 첫 접속에 1~2분 소요 |
-| 모델 가중치 | Hugging Face 모델 저장소 | 무료, 비공개 가능 |
-| DB | Supabase Free | 무료, 500MB. 1주일 미사용 시 프로젝트 일시정지됨 (대시보드에서 재개) |
+| 구성 요소 | 서비스 |
+|---|---|
+| 프론트엔드 | Vercel |
+| 백엔드 | Hugging Face Spaces (Docker) |
+| 모델 가중치 | Hugging Face 모델 저장소 (비공개) |
+| DB | Supabase (PostgreSQL) |
 
 ## 1. Supabase — DB 만들기
 
@@ -45,7 +45,7 @@ hf upload <HF아이디>/veil-roberta-ner backend/models . --private
 
 1. https://huggingface.co/new-space 에서 Space 생성
    - SDK: **Docker** → Blank
-   - Hardware: **CPU basic** (계정에 PRO 구독이 있어야 Docker SDK 선택 가능)
+   - Hardware: **CPU basic**
    - Visibility: **Public** (Vercel 프론트엔드가 호출해야 하므로 공개 필요. 코드만 공개되고 비밀값·모델은 노출되지 않음)
 2. Space의 **Settings → Variables and secrets** 에서 **Secret**으로 추가:
 
@@ -103,7 +103,3 @@ ALLOWED_ORIGINS=https://<your-app>.vercel.app
 
 `backend/.env`에 `DATABASE_URL`을 지정하지 않으면 SQLite(`admin_logs.db`)를 사용합니다.
 프론트엔드는 `npm run dev` 시 `/api` 요청을 `http://localhost:8000`으로 프록시합니다.
-
-## (참고) Render 배포
-
-`render.yaml`도 남아 있습니다. 모델 메모리 때문에 2GB 이상인 유료 `standard` 플랜이 필요합니다.
